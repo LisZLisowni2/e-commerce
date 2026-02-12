@@ -4,7 +4,7 @@
 
 <template>
   <header class="p-4">
-    <h1 class="text-3xl text-violet-700">E-commerance</h1>
+    <h1 class="text-3xl text-amber-500">E-commerance</h1>
   </header>
   <nav class="p-4">
     <p>Navigation</p>
