@@ -30,7 +30,7 @@
             @swiper="onSwiper" 
             @slide-change="onSlideChange"   
         >
-            <swiper-slide><div class="p-10 flex flex-row justify-center">Slide 1</div></swiper-slide>
+            <swiper-slide></swiper-slide>
             <swiper-slide>Slide 2</swiper-slide>
             <swiper-slide>Slide 3</swiper-slide>
         </swiper>
