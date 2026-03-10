@@ -1,6 +1,7 @@
 <script setup lang="ts">
     import { Swiper, SwiperSlide } from "swiper/vue"
     import { Navigation, Pagination, Scrollbar, A11y } from "swiper/modules"
+    import Slide from "@/components/swiper/Slide.vue"
     
     import "swiper/css"
     import "swiper/css/navigation"
@@ -29,10 +30,11 @@
             :scrollbar="{ draggable: true }"
             @swiper="onSwiper" 
             @slide-change="onSlideChange"   
+            class="h-40"
         >
-            <swiper-slide></swiper-slide>
-            <swiper-slide>Slide 2</swiper-slide>
-            <swiper-slide>Slide 3</swiper-slide>
+            <swiper-slide><slide>1</slide></swiper-slide>
+            <swiper-slide><slide>2</slide></swiper-slide>
+            <swiper-slide><slide>3</slide></swiper-slide>
         </swiper>
     </section>
 </template>
