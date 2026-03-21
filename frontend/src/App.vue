@@ -111,7 +111,7 @@
   </header>
   <nav class="flex justify-center">
     <NavigationMenu>
-      <NavigationMenuList class="max-w-dvw flex justify-center items-center overflow-auto">
+      <NavigationMenuList class="max-w-dvw flex flex-col sm:flex-row justify-center items-center overflow-auto">
         <NavigationMenuItem v-for="item in navElements" :key="item.index">
           <NavigationMenuTrigger>
             <Button variant="ghost">{{ item.name }}</Button>
