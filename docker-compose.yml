@@ -1,0 +1,22 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    env_file:
+      - ./backend/.env
+  nginx-backend:
+    image: nginx:1.29.8-alpine3.23 
+    volumes:
+      - ./nginx-backend/nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./backend:/app
+    depends_on:
+      - backend
+    ports:
+      - "8000:80"

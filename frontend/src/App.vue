@@ -1,16 +1,14 @@
 <script setup lang="ts">
-  import { RouterView, RouterLink } from "vue-router"
+  import { RouterView } from "vue-router"
   import { useThemeStore } from "./stores/useThemeStore";
   import Button from "./components/ui/button/Button.vue";
   import {
   NavigationMenu,
   NavigationMenuContent,
-  NavigationMenuIndicator,
   NavigationMenuItem,
   NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
-  NavigationMenuViewport,
 } from '@/components/ui/navigation-menu'
 
   const themeStore = useThemeStore();

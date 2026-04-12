@@ -6,9 +6,13 @@ import { Navigation, Pagination, A11y } from "swiper/modules";
 import Slide from "@/components/swiper/Slide.vue";
 import ItemCard from "@/components/ui/ItemCard.vue";
 
+// @ts-expect-error 
 import "swiper/css";
+// @ts-expect-error 
 import "swiper/css/navigation";
+// @ts-expect-error 
 import "swiper/css/pagination";
+
 import Section from "@/components/ui/Section.vue";
 
 const modules = [Navigation, Pagination, A11y];
