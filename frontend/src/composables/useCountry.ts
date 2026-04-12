@@ -2,6 +2,7 @@ import { ref, onMounted } from "vue"
 
 export default function useCountry() {
     const countryCode = ref<string>("")
+    const isLoading = ref<boolean>(true)
 
     onMounted(async () => {
         try {
@@ -10,6 +11,8 @@ export default function useCountry() {
             countryCode.value = data.country
         } catch {
             countryCode.value = navigator.language.split('-')[1] || 'US'
+        } finally {
+            isLoading.value = false
         }
     })
 
