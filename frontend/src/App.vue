@@ -17,7 +17,8 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent
 } from "@/components/ui/dropdown-menu"
-import { ChevronsUpDown, Check } from "lucide-vue-next";
+import { ChevronsUpDown, Check, Search, CircleUserRound, Phone, ShoppingBasket } from "lucide-vue-next";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "./components/ui/input-group";
   const { t, locale } = useI18n()
 
   const languages = [
@@ -129,31 +130,46 @@ import { ChevronsUpDown, Check } from "lucide-vue-next";
 </script>
 
 <template>
-  <header class="p-4 flex flex-row *:mr-4 items-center">
-    <h1 class="text-xl sm:text-3xl text-amber-500">E-commerance</h1>
-    <Button @click="themeStore.mode === 'light' ? themeStore.mode = 'dark' : themeStore.mode = 'light'">
-      {{ $t('theme') }}
-    </Button>
-    <DropdownMenu>
-      <DropdownMenuTrigger as-child>
-        <Button variant="outline" className="w-48 justify-between flex items-center">
-          <span>{{currentLanguage.flag}} {{currentLanguage.label}}</span>
-          <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-48">
-          <DropdownMenuItem
-            v-for="lang in languages"
-            :key="lang.code"
-            className="flex justify-between"
-          >
-            <Button variant="link" @click="selected = lang.code">
-              <span>{{lang.flag}} {{lang.label}}</span>
-              <Check v-if="selected === lang.code" className="h-4 w-4" />
-            </Button>
-          </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+  <header class="flex max-md:flex-col items-center w-full gap-4 px-4 py-2">
+    <div class="flex flex-row items-center gap-4 shrink-0">
+      <h1 class="text-xl sm:text-3xl text-amber-500">E-commerance</h1>
+      <Button @click="themeStore.mode === 'light' ? themeStore.mode = 'dark' : themeStore.mode = 'light'">
+        {{ $t('theme') }}
+      </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger as-child>
+          <Button variant="outline" className="w-48 justify-between flex items-center">
+            <span>{{currentLanguage.flag}} {{currentLanguage.label}}</span>
+            <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent className="w-48">
+            <DropdownMenuItem
+              v-for="lang in languages"
+              :key="lang.code"
+              className="flex justify-between"
+            >
+              <Button variant="link" @click="selected = lang.code">
+                <span>{{lang.flag}} {{lang.label}}</span>
+                <Check v-if="selected === lang.code" className="h-4 w-4" />
+              </Button>
+            </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+    <div class="flex-1">
+      <InputGroup>
+        <InputGroupInput placeholder="Search..." />
+        <InputGroupAddon>
+          <Search />
+        </InputGroupAddon>
+      </InputGroup>
+    </div>
+    <div class="flex gap-4 shrink-0 max-md:m-auto ml-auto">
+      <Phone />
+      <CircleUserRound />
+      <ShoppingBasket />
+    </div>
   </header>
   <nav class="flex justify-center">
     <NavigationMenu>
