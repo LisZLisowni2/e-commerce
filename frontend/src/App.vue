@@ -1,5 +1,6 @@
 <script setup lang="ts">
-  import { ref, watch } from "vue";
+  import { useI18n } from "vue-i18n";
+  import { computed, ref, watch } from "vue";
   import { RouterView } from "vue-router"
   import { useThemeStore } from "./stores/useThemeStore";
   import Button from "./components/ui/button/Button.vue";
@@ -17,10 +18,30 @@ import {
   DropdownMenuContent
 } from "@/components/ui/dropdown-menu"
 import { ChevronsUpDown, Check } from "lucide-vue-next";
+  const { t, locale } = useI18n()
+
+  const languages = [
+    { code: "en", label: "English", "flag": "🇺🇸", region: "US" },
+    { code: "pl", label: "Polish", "flag": "🇵🇱", region: "PL"}
+  ]
+
+  const selected = ref<string>('en')
+
+  const currentLanguage = ref<{
+    code: string,
+    label: string,
+    flag: string,
+    region: string
+  }>({ code: "en", label: "English", "flag": "🇺🇸", region: "EN" });
+
+  watch(selected, (newCode) => {
+    currentLanguage.value = languages.find(l => l.code === newCode)! 
+    locale.value = newCode
+  })
 
   const themeStore = useThemeStore();
 
-  const navElements = [
+  const navElements = computed(() => [
     {
       index: 0,
       name: 'Laptop',
@@ -60,36 +81,36 @@ import { ChevronsUpDown, Check } from "lucide-vue-next";
         },
         {
           index: 7,
-          name: 'Workstation',
+          name: t('nav.desktop.workstation'),
           link: '/desktop/workstation' 
         },
       ]
     },
     {
       index: 8,
-      name: 'Peripheral',
+      name: t('nav.peripherials.name'),
       link: '/peripheral',
       subnames: [
         {
           index: 9,
-          name: 'Mouse',
+          name: t('nav.peripherials.mouse'),
           link: '/peripheral/mouse',
         },
         {
           index: 10,
-          name: 'Keyboard',
+          name: t('nav.peripherials.keyboard'),
           link: '/peripheral/keyboard',
         },
         {
           index: 11,
-          name: 'Headset',
+          name: t('nav.peripherials.headset'),
           link: '/peripheral/headset' 
         },
       ]
     },
     {
       index: 12,
-      name: 'Server',
+      name: t('nav.server.name'),
       link: '/server',
       subnames: [
         {
@@ -99,37 +120,19 @@ import { ChevronsUpDown, Check } from "lucide-vue-next";
         },
         {
           index: 14,
-          name: 'Business',
+          name: t('nav.server.business'),
           link: '/server/businnes',
         },
       ]
     }
-  ]
-
-  const languages = [
-    { code: "en", label: "English", "flag": "🇺🇸", region: "US" },
-    { code: "pl", label: "Polish", "flag": "🇵🇱", region: "PL"}
-  ]
-
-  const selected = ref<string>('us')
-
-  const currentLanguage = ref<{
-    code: string,
-    label: string,
-    flag: string,
-    region: string
-  }>({ code: "en", label: "English", "flag": "🇺🇸", region: "US" });
-
-  watch(selected, (newCode) => {
-    currentLanguage.value = languages.find(l => l.code === newCode)! 
-  })
+  ])
 </script>
 
 <template>
   <header class="p-4 flex flex-row *:mr-4 items-center">
     <h1 class="text-xl sm:text-3xl text-amber-500">E-commerance</h1>
     <Button @click="themeStore.mode === 'light' ? themeStore.mode = 'dark' : themeStore.mode = 'light'">
-      Toggle Theme
+      {{ $t('theme') }}
     </Button>
     <DropdownMenu>
       <DropdownMenuTrigger as-child>
