@@ -17,7 +17,8 @@ const messages = {
             desktop: {
                 workstation: "Workstation"
             }
-        }
+        },
+        bargains: "Bargains of the day"
     },
     pl: {
         theme: "Zmień motyw",
@@ -35,7 +36,8 @@ const messages = {
             desktop: {
                 workstation: "Stacja robocza"
             }
-        }
+        },
+        bargains: "Okazje dnia"
     }
 }
 
