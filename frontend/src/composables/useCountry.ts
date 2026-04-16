@@ -8,8 +8,7 @@ export default function useCountry() {
     onMounted(async () => {
         try {
             const res = await api.get("/geo")
-            const data = await res.data
-            countryCode.value = data.country
+            countryCode.value = res.data.country
         } catch {
             countryCode.value = navigator.language.split('-')[1] || 'US'
         } finally {
@@ -17,5 +16,5 @@ export default function useCountry() {
         }
     })
 
-    return { countryCode }
+    return { countryCode, isLoading }
 } 

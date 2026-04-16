@@ -1,4 +1,5 @@
 <script setup lang="ts">
+  import { ref, watch } from "vue";
   import { RouterView } from "vue-router"
   import { useThemeStore } from "./stores/useThemeStore";
   import Button from "./components/ui/button/Button.vue";
@@ -10,6 +11,12 @@
   NavigationMenuList,
   NavigationMenuTrigger,
 } from '@/components/ui/navigation-menu'
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent
+} from "@/components/ui/dropdown-menu"
+import { ChevronsUpDown, Check } from "lucide-vue-next";
 
   const themeStore = useThemeStore();
 
@@ -98,6 +105,24 @@
       ]
     }
   ]
+
+  const languages = [
+    { code: "en", label: "English", "flag": "🇺🇸", region: "US" },
+    { code: "pl", label: "Polish", "flag": "🇵🇱", region: "PL"}
+  ]
+
+  const selected = ref<string>('us')
+
+  const currentLanguage = ref<{
+    code: string,
+    label: string,
+    flag: string,
+    region: string
+  }>({ code: "en", label: "English", "flag": "🇺🇸", region: "US" });
+
+  watch(selected, (newCode) => {
+    currentLanguage.value = languages.find(l => l.code === newCode)! 
+  })
 </script>
 
 <template>
@@ -106,6 +131,26 @@
     <Button @click="themeStore.mode === 'light' ? themeStore.mode = 'dark' : themeStore.mode = 'light'">
       Toggle Theme
     </Button>
+    <DropdownMenu>
+      <DropdownMenuTrigger as-child>
+        <Button variant="outline" className="w-48 justify-between flex items-center">
+          <span>{{currentLanguage.flag}} {{currentLanguage.label}}</span>
+          <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-48">
+          <DropdownMenuItem
+            v-for="lang in languages"
+            :key="lang.code"
+            className="flex justify-between"
+          >
+            <Button variant="link" @click="selected = lang.code">
+              <span>{{lang.flag}} {{lang.label}}</span>
+              <Check v-if="selected === lang.code" className="h-4 w-4" />
+            </Button>
+          </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   </header>
   <nav class="flex justify-center">
     <NavigationMenu>
