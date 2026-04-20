@@ -17,8 +17,10 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent
 } from "@/components/ui/dropdown-menu"
+import IconDropdown from "./components/navigation/IconDropdown.vue";
 import { ChevronsUpDown, Check, Search, CircleUserRound, Phone, ShoppingBasket } from "lucide-vue-next";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "./components/ui/input-group";
+import DropdownMenuItem from "./components/ui/dropdown-menu/DropdownMenuItem.vue";
   const { t, locale } = useI18n()
 
   const languages = [
@@ -134,11 +136,11 @@ import { InputGroup, InputGroupAddon, InputGroupInput } from "./components/ui/in
     <div class="flex flex-row items-center gap-4 shrink-0">
       <h1 class="text-xl sm:text-3xl text-amber-500">E-commerance</h1>
       <Button @click="themeStore.mode === 'light' ? themeStore.mode = 'dark' : themeStore.mode = 'light'">
-        {{ $t('theme') }}
+        {{ t('theme') }}
       </Button>
       <DropdownMenu>
         <DropdownMenuTrigger as-child>
-          <Button variant="outline" className="w-48 justify-between flex items-center">
+          <Button variant="secondary" className="w-48 justify-between flex items-center">
             <span>{{currentLanguage.flag}} {{currentLanguage.label}}</span>
             <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
           </Button>
@@ -166,9 +168,36 @@ import { InputGroup, InputGroupAddon, InputGroupInput } from "./components/ui/in
       </InputGroup>
     </div>
     <div class="flex gap-4 shrink-0 max-md:m-auto ml-auto">
-      <Phone />
-      <CircleUserRound />
-      <ShoppingBasket />
+      <IconDropdown>
+        <template #icon>
+          <Phone />
+        </template>
+        <template #content>
+          <DropdownMenuItem>
+            <h1>Test</h1>
+          </DropdownMenuItem>
+        </template>
+      </IconDropdown>
+      <IconDropdown>
+        <template #icon>
+          <CircleUserRound />
+        </template>
+        <template #content>
+          <DropdownMenuItem>
+            <h1>Test</h1>
+          </DropdownMenuItem>
+        </template>
+      </IconDropdown>
+      <IconDropdown>
+        <template #icon>
+          <ShoppingBasket />
+        </template>
+        <template #content>
+          <DropdownMenuItem>
+            <h1>Test</h1>
+          </DropdownMenuItem>
+        </template>
+      </IconDropdown>
     </div>
   </header>
   <nav class="flex justify-center">
