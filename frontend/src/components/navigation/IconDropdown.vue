@@ -17,7 +17,9 @@
         </Button>
     </DropdownMenuTrigger>
     <DropdownMenuContent className="w-48">
-        <slot name="content"></slot>
+        <slot name="content">
+            
+        </slot>
     </DropdownMenuContent>
     </DropdownMenu>
 </template>

@@ -174,4 +174,129 @@ const modules = [Navigation, Pagination, A11y];
         </swiper>
         <div class="m-5 overflow-auto whitespace-nowrap p-5"></div>
     </Section>
+    <Section>
+        <h1 class="text-3xl font-bold">{{ t("recommended") }}</h1>
+        <swiper
+            :slides-per-view="1"
+            :breakpoints="{
+                640: { slidesPerView: 2, spaceBetween: 20 },
+                768: { slidesPerView: 3, spaceBetween: 30 },
+                1024: { slidesPerView: 4, spaceBetween: 40 },
+                1280: { slidesPerView: 6, spaceBetween: 50 }
+            }"
+            :space-between="50"
+            navigation
+            :modules="modules"
+            :pagination="{ clickable: true }"
+            :scrollbar="{ draggable: true }"
+            :autoplay="{ delay: 5000 }"
+            class="m-8"
+        >
+            <swiper-slide>
+                <ItemCard
+                    title="Test"
+                    :image-url="testProduct"
+                    :price="12.44"
+                    :lowest-price30-days="12.44"
+                />
+            </swiper-slide>
+            <swiper-slide>
+                <ItemCard
+                    title="Test"
+                    :image-url="testProduct"
+                    :price="12.44"
+                    :lowest-price30-days="12.44"
+                />
+            </swiper-slide>
+            <swiper-slide>
+                <ItemCard
+                    title="Test"
+                    :image-url="testProduct"
+                    :price="12.44"
+                    :lowest-price30-days="12.44"
+                />
+            </swiper-slide>
+            <swiper-slide>
+                <ItemCard
+                    title="Test"
+                    :image-url="testProduct"
+                    :price="12.44"
+                    :lowest-price30-days="12.44"
+                />
+            </swiper-slide>
+            <swiper-slide>
+                <ItemCard
+                    title="Test"
+                    :image-url="testProduct"
+                    :price="12.44"
+                    :lowest-price30-days="12.44"
+                />
+            </swiper-slide>
+            <swiper-slide>
+                <ItemCard
+                    title="Test"
+                    :image-url="testProduct"
+                    :price="12.44"
+                    :lowest-price30-days="12.44"
+                />
+            </swiper-slide>
+            <swiper-slide>
+                <ItemCard
+                    title="Test"
+                    :image-url="testProduct"
+                    :price="12.44"
+                    :lowest-price30-days="12.44"
+                />
+            </swiper-slide>
+            <swiper-slide>
+                <ItemCard
+                    title="Test"
+                    :image-url="testProduct"
+                    :price="12.44"
+                    :lowest-price30-days="12.44"
+                />
+            </swiper-slide>
+            <swiper-slide>
+                <ItemCard
+                    title="Test"
+                    :image-url="testProduct"
+                    :price="12.44"
+                    :lowest-price30-days="12.44"
+                />
+            </swiper-slide>
+            <swiper-slide>
+                <ItemCard
+                    title="Test"
+                    :image-url="testProduct"
+                    :price="12.44"
+                    :lowest-price30-days="12.44"
+                />
+            </swiper-slide>
+            <swiper-slide>
+                <ItemCard
+                    title="Test"
+                    :image-url="testProduct"
+                    :price="12.44"
+                    :lowest-price30-days="12.44"
+                />
+            </swiper-slide>
+            <swiper-slide>
+                <ItemCard
+                    title="Test"
+                    :image-url="testProduct"
+                    :price="12.44"
+                    :lowest-price30-days="12.44"
+                />
+            </swiper-slide>
+            <swiper-slide>
+                <ItemCard
+                    title="Test"
+                    :image-url="testProduct"
+                    :price="12.44"
+                    :lowest-price30-days="12.44"
+                />
+            </swiper-slide>
+        </swiper>
+        <div class="m-5 overflow-auto whitespace-nowrap p-5"></div>
+    </Section>
 </template>

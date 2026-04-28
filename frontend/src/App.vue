@@ -133,7 +133,7 @@ import DropdownMenuItem from "./components/ui/dropdown-menu/DropdownMenuItem.vue
 
 <template>
   <header class="flex max-md:flex-col items-center w-full gap-4 px-4 py-2">
-    <div class="flex flex-row items-center gap-4 shrink-0">
+    <div class="flex flex-row max-md:flex-col items-center gap-4 shrink-0">
       <h1 class="text-xl sm:text-3xl text-amber-500">E-commerance</h1>
       <Button @click="themeStore.mode === 'light' ? themeStore.mode = 'dark' : themeStore.mode = 'light'">
         {{ t('theme') }}
@@ -221,4 +221,7 @@ import DropdownMenuItem from "./components/ui/dropdown-menu/DropdownMenuItem.vue
   <main class="bg-zinc-50 min-h-screen dark:bg-zinc-900">
     <router-view />
   </main>
+  <footer class="p-8 flex flex-col justify-center items-center">
+    <p>Copyright</p>
+  </footer>
 </template>
