@@ -22,7 +22,7 @@ const modules = [Navigation, Pagination, A11y];
 </script>
 
 <template>
-    <!-- <Section>
+    <Section>
         <swiper
             :slides-per-view="1"
             :space-between="50"
@@ -48,7 +48,7 @@ const modules = [Navigation, Pagination, A11y];
                 </slide>
             </swiper-slide>
         </swiper>
-    </Section> -->
+    </Section>
     <Section>
         <h1 class="text-3xl font-bold">{{ t("bargains") }}</h1>
         <swiper

@@ -7,12 +7,28 @@ services:
       - "80:80"
     environment:
       - VITE_API_URI=http://localhost:8080/api
+    healthcheck:
+      test: ["CMD", "service", "ngnix", "status"]
+      retries: 3
+      timeout: 5s
+    networks:
+      - default
+    depends_on:
+      - backend
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     env_file:
       - ./backend/.env
+    healthcheck:
+      test: ["CMD", "service", "php-fpm", "status"]
+      retries: 3
+      timeout: 5s
+    networks:
+      - default
+    depends_on:
+      - pgsql
   nginx-backend:
     image: nginx:1.29.8-alpine3.23 
     volumes:
@@ -20,5 +36,36 @@ services:
       - ./backend:/app
     depends_on:
       - backend
+    healthcheck:
+      test: ["CMD", "service", "ngnix", "status"]
+      retries: 3
+      timeout: 5s
     ports:
       - "8080:80"
+    networks:
+      - default
+  pgsql:
+    image: postgres:18-alpine
+    healthcheck:
+      test: ["CMD", "pg_isready", "-q", "-d", "ecommerance", "-U", "postgres"]
+      retries: 3
+      timeout: 5s
+    volumes:
+      - pgdata:/var/lib/postgresql
+    secrets:
+      - pgsql_password
+    environment:
+      - POSTGRES_PASSWORD_FILE=/run/secrets/pgsql_password
+    networks:
+      - default
+
+volumes:
+  pgdata:
+
+networks:
+  default:
+    driver: bridge
+
+secrets:
+  pgsql_password:
+    file: pgsql_password.txt

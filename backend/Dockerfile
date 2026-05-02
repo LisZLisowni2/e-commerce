@@ -27,7 +27,10 @@ RUN apk add --no-cache \
     curl && \ 
         docker-php-ext-install pdo pdo_pgsql mbstring zip exif pcntl gd
 
-COPY --from=build app .
+COPY --from=build /app .
+
+RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache \
+    && chmod -R 775 /app/storage /app/bootstrap/cache
 
 EXPOSE 9000
 CMD ["php-fpm"]
