@@ -77,3 +77,4 @@ dist-ssr
 *.sln
 *.sw?
 pgsql_password.txt
+geoip/
