@@ -8,7 +8,10 @@ export const useCountryStore = defineStore('country-store', () => {
 
     async function fetchCountryCode() {
         try {
-            const res = await api.get(`/geo`)
+            const externalAPIres = await fetch("https://ifconfig.me/ip")
+            const ip = await externalAPIres.text()
+
+            const res = await api.get(`/geo/${ip}`)
             countryCode.value = res.data.country
         } catch {
             countryCode.value = navigator.language.split('-')[1] || 'US'

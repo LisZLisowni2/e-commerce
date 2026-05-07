@@ -1,16 +1,15 @@
 services:
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
+    image: 127.0.0.1:5000/ecommerce-frontend
     ports:
-      - "8080:80"
-      - "8443:443"
+      - target: 80
+        published: 8080
+        protocol: tcp
+        mode: host
     volumes:
-      - ./geoip:/usr/share/geoip
       - /config/www
     healthcheck:
-      test: ["CMD", "service", "ngnix", "status"]
+      test: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
       retries: 3
       timeout: 5s
     networks:
@@ -18,13 +17,11 @@ services:
     depends_on:
       - backend
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    image: 127.0.0.1:5000/ecommerce-backend
     env_file:
       - ./backend/.env
     healthcheck:
-      test: ["CMD", "service", "php-fpm", "status"]
+      test: ["CMD-SHELL", "nc -z localhost 9000 || exit 1"]
       retries: 3
       timeout: 5s
     networks:
@@ -36,22 +33,24 @@ services:
     volumes:
       - ./nginx-backend/nginx.conf:/config/nginx/site-confs/default.conf
       - ./backend:/app
-      - ./geoip:/usr/share/geoip
       - /config/www
     depends_on:
       - backend
     healthcheck:
-      test: ["CMD", "service", "ngnix", "status"]
+      test: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
       retries: 3
       timeout: 5s
     ports:
-      - "80:80"
+      - target: 80
+        published: 80
+        protocol: tcp
+        mode: host
     networks:
       - default
-  pgsql:
+  db:
     image: postgres:18-alpine
     healthcheck:
-      test: ["CMD", "pg_isready", "-q", "-d", "ecommerance", "-U", "postgres"]
+      test: ["CMD", "pg_isready", "-q", "-d", "ecommerce", "-U", "postgres"]
       retries: 3
       timeout: 5s
     volumes:
@@ -62,24 +61,13 @@ services:
       - POSTGRES_PASSWORD_FILE=/run/secrets/pgsql_password
     networks:
       - default
-  geoip-updater:
-    image: maxmindinc/geoipupdate
-    env_file: .env
-    volumes:
-      - ./geoip:/usr/share/geoip 
-    environment:
-      - GEOIPUPDATE_ACCOUNT_ID=${MAXMIND_ACCOUNT_ID}
-      - GEOIPUPDATE_LICENSE_KEY=${MAXMIND_LICENSE_KEY}
-      - GEOIPUPDATE_EDITION_IDS=GeoLite2-Country
-      - GEOIPUPDATE_DB_DIR=/usr/share/geoip
-      - GEOIPUPDATE_FREQUENCY=168 
 
 volumes:
   pgdata:
 
 networks:
   default:
-    driver: bridge
+    driver: overlay
 
 secrets:
   pgsql_password:

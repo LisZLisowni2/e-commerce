@@ -1,6 +1,6 @@
 import axios from "axios"
 
-const API_URI: string = "http://localhost/api"
+const API_URI: string = "http://localhost:8080/api"
 
 const getToken = () => localStorage.getItem("token")
 const isLocalhost = window.location.hostname === "localhost"
