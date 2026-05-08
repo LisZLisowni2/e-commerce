@@ -2,10 +2,7 @@ services:
   frontend:
     image: 127.0.0.1:5000/ecommerce-frontend
     ports:
-      - target: 80
-        published: 8080
-        protocol: tcp
-        mode: host
+      - "8080:80"
     volumes:
       - /config/www
     healthcheck:
@@ -41,10 +38,7 @@ services:
       retries: 3
       timeout: 5s
     ports:
-      - target: 80
-        published: 80
-        protocol: tcp
-        mode: host
+      - "80:80"
     networks:
       - default
   db:
