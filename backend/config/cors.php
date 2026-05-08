@@ -1,5 +1,13 @@
 <?php
 
+$env = env("APP_ENV", "production");
+$origins = [];
+if ($env != "production") {
+    $origins = ["*"];
+} else {
+    $origins = [env('FRONTEND_URL', 'http://frontend:8080')];
+}
+
 return [
 
     /*
@@ -19,7 +27,7 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => [env('FRONTEND_URL', 'http://frontend:5173')],
+    'allowed_origins' => $origins,
 
     'allowed_origins_patterns' => [],
 

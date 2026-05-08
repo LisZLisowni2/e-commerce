@@ -1,0 +1,73 @@
+services:
+  frontend:
+    image: 127.0.0.1:5000/ecommerce-frontend-dev
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.vscode
+      - /app/nginx
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --no-check-certificate --spider http://localhost:5173 || exit 1"]
+      retries: 3
+      timeout: 5s
+    environment:
+      - VITE_API_URI=http://localhost/api
+    networks:
+      - default
+    depends_on:
+      - backend
+  backend:
+    image: 127.0.0.1:5000/ecommerce-backend
+    env_file:
+      - ./backend/.env
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 9000 || exit 1"]
+      retries: 3
+      timeout: 5s
+    networks:
+      - default
+    depends_on:
+      - pgsql
+  nginx-backend:
+    image: lscr.io/linuxserver/nginx:latest
+    volumes:
+      - ./nginx-backend/nginx.conf:/config/nginx/site-confs/default.conf
+      - ./backend:/app
+      - /config/www
+    depends_on:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
+      retries: 3
+      timeout: 5s
+    ports:
+      - "80:80"
+    networks:
+      - default
+  db:
+    image: postgres:18-alpine
+    healthcheck:
+      test: ["CMD", "pg_isready", "-q", "-d", "ecommerce", "-U", "postgres"]
+      retries: 3
+      timeout: 5s
+    volumes:
+      - pgdata:/var/lib/postgresql
+    secrets:
+      - pgsql_password
+    environment:
+      - POSTGRES_PASSWORD_FILE=/run/secrets/pgsql_password
+    networks:
+      - default
+
+volumes:
+  pgdata:
+
+networks:
+  default:
+    driver: overlay
+
+secrets:
+  pgsql_password:
+    file: pgsql_password.txt
