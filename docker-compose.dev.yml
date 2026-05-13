@@ -60,6 +60,15 @@ services:
       - POSTGRES_PASSWORD_FILE=/run/secrets/pgsql_password
     networks:
       - default
+  redis:
+    image: redis:8.6.3-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "PING"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - default
 
 volumes:
   pgdata:
