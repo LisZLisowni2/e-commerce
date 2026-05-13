@@ -55,6 +55,8 @@ services:
       - POSTGRES_PASSWORD_FILE=/run/secrets/pgsql_password
     networks:
       - default
+  redis:
+    image: redis:8.6.3-alpine
 
 volumes:
   pgdata:
