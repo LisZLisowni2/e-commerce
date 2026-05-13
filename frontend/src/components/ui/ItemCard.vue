@@ -2,7 +2,7 @@
 defineProps<{
     title: string;
     price: number;
-    lowestPrice30Days: number;
+    lowestPrice30Days?: number;
     imageUrl: string;
 }>();
 
@@ -35,6 +35,7 @@ const { countryCode, isLoading } = storeToRefs(countryStore);
                     !isLoading && countryCode === 'PL' && lowestPrice30Days
                 "
                 class="text-sm text-gray-500 mt-1"
+                data-testid="lowest-price"
             >
                 Najniższa cena z 30 dni: {{ lowestPrice30Days }} zł
             </p>
