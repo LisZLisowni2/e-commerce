@@ -21,7 +21,7 @@ services:
   backend:
     image: 127.0.0.1:5000/ecommerce-backend
     env_file:
-      - ./backend/.env
+      - ./backend/.env.dev
     healthcheck:
       test: ["CMD-SHELL", "nc -z localhost 9000 || exit 1"]
       retries: 3
@@ -30,6 +30,7 @@ services:
       - default
     depends_on:
       - pgsql
+      
   nginx-backend:
     image: lscr.io/linuxserver/nginx:latest
     volumes:
@@ -53,7 +54,7 @@ services:
       retries: 3
       timeout: 5s
     volumes:
-      - pgdata:/var/lib/postgresql
+      - pgdata-dev:/var/lib/postgresql
     secrets:
       - pgsql_password
     environment:
@@ -71,7 +72,7 @@ services:
       - default
 
 volumes:
-  pgdata:
+  pgdata-dev:
 
 networks:
   default:
