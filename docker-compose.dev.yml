@@ -26,11 +26,13 @@ services:
       test: ["CMD-SHELL", "nc -z localhost 9000 || exit 1"]
       retries: 3
       timeout: 5s
+    volumes:
+      - storage-public:/app/storage/app/public/
     networks:
       - default
     depends_on:
       - pgsql
-      
+
   nginx-backend:
     image: lscr.io/linuxserver/nginx:latest
     volumes:
@@ -73,6 +75,7 @@ services:
 
 volumes:
   pgdata-dev:
+  storage-public:
 
 networks:
   default:

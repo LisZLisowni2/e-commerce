@@ -21,6 +21,8 @@ services:
       test: ["CMD-SHELL", "nc -z localhost 9000 || exit 1"]
       retries: 3
       timeout: 5s
+    volumes:
+      - storage-public:/app/storage/app/public/
     networks:
       - default
     depends_on:
@@ -57,9 +59,17 @@ services:
       - default
   redis:
     image: redis:8.6.3-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "PING"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - default
 
 volumes:
   pgdata:
+  storage-public:
 
 networks:
   default:
