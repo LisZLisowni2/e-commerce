@@ -1,10 +1,9 @@
 import { mount } from "@vue/test-utils";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import ItemCard from "@/components/ui/ItemCard.vue";
-// Import the composable so we can mock it
 import { useCountryCode } from "@/composables/useCountryCode";
 
-// 1. Mock the composable module
+// Mock the composable module
 vi.mock("@/composables/useCountryCode", () => ({
     useCountryCode: vi.fn(),
 }));
