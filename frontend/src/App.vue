@@ -32,7 +32,7 @@ import {
     InputGroupInput,
 } from "./components/ui/input-group";
 import DropdownMenuItem from "./components/ui/dropdown-menu/DropdownMenuItem.vue";
-import { useCountryStore } from "@/stores/useCountryStore";
+import { useCountryStore } from "@/composables/useCountryCode.ts";
 const { t, locale } = useI18n();
 
 const countryStore = useCountryStore()
