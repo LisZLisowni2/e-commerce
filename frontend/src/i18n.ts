@@ -18,8 +18,7 @@ const messages = {
                 workstation: "Workstation"
             }
         },
-        bargains: "Bargains of the day",
-        recommended: "Recommended"
+        latest: "Latest products"
     },
     pl: {
         theme: "Zmień motyw",
@@ -38,8 +37,7 @@ const messages = {
                 workstation: "Stacja robocza"
             }
         },
-        bargains: "Okazje dnia",
-        recommended: "Rekomendowane"
+        latest: "Najnowsze produkty"
     }
 }
 

@@ -15,13 +15,15 @@ class Product extends Model
         'name',
         'description',
         'price',
-        'last30DaysPrice'
+        'imageURL',
+        'last30DaysPrice',
     ];
 
     protected $casts = [
         "name" => "string",
         "description" => "string",
         "price" => PriceCast::class,
+        "imageURL" => "string",
         "last30DaysPrice" => PriceCast::class,
     ];
 }
