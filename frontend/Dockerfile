@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY . .
 
-RUN npm install && npm run build
+RUN npm install --legacy-peer-deps && npm run build
 
 FROM lscr.io/linuxserver/nginx:latest AS dist
 
