@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
-import { computed, onMounted, ref, watch } from "vue";
-import { RouterView } from "vue-router";
+import { computed, ref, watch } from "vue";
+import { RouterView, RouterLink } from "vue-router";
 import { useThemeStore } from "./stores/useThemeStore";
 import Button from "./components/ui/button/Button.vue";
 import {
@@ -32,14 +32,7 @@ import {
     InputGroupInput,
 } from "./components/ui/input-group";
 import DropdownMenuItem from "./components/ui/dropdown-menu/DropdownMenuItem.vue";
-import { useCountryStore } from "@/composables/useCountryCode.ts";
 const { t, locale } = useI18n();
-
-const countryStore = useCountryStore()
-
-onMounted(() => {
-  countryStore.fetchCountryCode()
-})
 
 const languages = [
     { code: "en", label: "English", flag: "🇺🇸", region: "US" },
@@ -217,7 +210,7 @@ const navElements = computed(() => [
                 </template>
                 <template #content>
                     <DropdownMenuItem>
-                        <h1>Test</h1>
+                        <RouterLink to="/login">Login</RouterLink>
                     </DropdownMenuItem>
                 </template>
             </IconDropdown>
