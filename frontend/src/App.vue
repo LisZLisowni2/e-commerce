@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
 import { computed, ref, watch } from "vue";
-import { RouterView, RouterLink } from "vue-router";
+import { RouterView } from "vue-router";
 import { useThemeStore } from "./stores/useThemeStore";
 import Button from "./components/ui/button/Button.vue";
 import {
@@ -16,6 +16,7 @@ import {
     DropdownMenu,
     DropdownMenuTrigger,
     DropdownMenuContent,
+    DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import IconDropdown from "./components/navigation/IconDropdown.vue";
 import {
@@ -31,7 +32,16 @@ import {
     InputGroupAddon,
     InputGroupInput,
 } from "./components/ui/input-group";
-import DropdownMenuItem from "./components/ui/dropdown-menu/DropdownMenuItem.vue";
+import {
+    Dialog,
+    DialogContent,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 const { t, locale } = useI18n();
 
 const languages = [
@@ -200,7 +210,10 @@ const navElements = computed(() => [
                 </template>
                 <template #content>
                     <DropdownMenuItem>
-                        <h1>Test</h1>
+                        <h1>+48000000000</h1>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                        <h1>ecommerce@gmail.com</h1>
                     </DropdownMenuItem>
                 </template>
             </IconDropdown>
@@ -209,8 +222,43 @@ const navElements = computed(() => [
                     <CircleUserRound />
                 </template>
                 <template #content>
-                    <DropdownMenuItem>
-                        <RouterLink to="/login">Login</RouterLink>
+                    <DropdownMenuItem @select.prevent>
+                        <Dialog>
+                            <DialogTrigger as-child>
+                                <span class="w-full cursor-pointer">Login</span>
+                            </DialogTrigger>
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>Login form</DialogTitle>
+                                </DialogHeader>
+                                <form>
+                                    <div class="grid gap-4 p-3">
+                                        <div class="grid gap-3">
+                                            <Label for="email-1">Email</Label>
+                                            <Input
+                                                id="email-1"
+                                                name="email"
+                                                type="email"
+                                            />
+                                        </div>
+                                        <div class="grid gap-3">
+                                            <Label for="password-1"
+                                                >Password</Label
+                                            >
+                                            <Input
+                                                id="password-1"
+                                                name="password"
+                                                type="password"
+                                            />
+                                        </div>
+                                    </div>
+                                </form>
+                                <DialogFooter>
+                                    <Button type="submit">Login</Button>
+                                    <RouterLink to="/register"><Button variant="outline">Register</Button></RouterLink>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
                     </DropdownMenuItem>
                 </template>
             </IconDropdown>
