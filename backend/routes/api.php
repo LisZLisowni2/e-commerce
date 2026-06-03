@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ProductController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Log;
@@ -17,6 +18,8 @@ Route::get("/geo/{ip}", function(Request $request, string $ip) {
         "country" => Location::get($ip)->countryCode ?? "US",
     ]);
 });
+
+Route::get("/products", [ProductController::class, "index"]);
 
 Route::get("/image/{path}", function(string $path) {
     if (!Storage::disk('minio')->exists($path)) {

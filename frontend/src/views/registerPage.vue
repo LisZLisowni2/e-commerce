@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import Section from "@/components/ui/Section.vue";
-import { useI18n } from "vue-i18n";
 import { useForm, useField } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/zod";
 import * as z from "zod";
@@ -42,8 +41,6 @@ const { value: confirmPassword } = useField<string>('confirmPassword')
 const onSubmit = handleSubmit((values) => {
     console.log(`Data: ${JSON.stringify(values, null, 2)}`)
 })
-
-const { t } = useI18n();
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
