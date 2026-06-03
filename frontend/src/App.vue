@@ -38,6 +38,7 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
+    DialogClose,
     DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -255,7 +256,9 @@ const navElements = computed(() => [
                                 </form>
                                 <DialogFooter>
                                     <Button type="submit">Login</Button>
-                                    <RouterLink to="/register"><Button variant="outline">Register</Button></RouterLink>
+                                    <DialogClose as-child>
+                                        <RouterLink to="/register"><Button variant="outline">Register</Button></RouterLink>
+                                    </DialogClose>
                                 </DialogFooter>
                             </DialogContent>
                         </Dialog>
