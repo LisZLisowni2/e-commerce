@@ -9,10 +9,6 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 
 import Section from "@/components/ui/Section.vue";
-import { useI18n } from "vue-i18n";
-
-const { t } = useI18n();
-
 const modules = [Navigation, Pagination, A11y];
 </script>
 
@@ -30,7 +26,7 @@ const modules = [Navigation, Pagination, A11y];
         </swiper>
     </Section>
     <Section>
-        <h1 class="text-3xl font-bold">{{ t("latest") }}</h1>
+        <h1 class="text-3xl font-bold">Latest</h1>
         <swiper
             :slides-per-view="1"
             :breakpoints="{

@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { useI18n } from "vue-i18n";
+import { useForm, useField } from "vee-validate";
+import { toTypedSchema } from "@vee-validate/zod";
+import * as z from "zod";
 import { computed, ref, watch } from "vue";
 import { RouterView } from "vue-router";
 import { useThemeStore } from "./stores/useThemeStore";
@@ -43,26 +46,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-const { t, locale } = useI18n();
-
-const languages = [
-    { code: "en", label: "English", flag: "🇺🇸", region: "US" },
-    { code: "pl", label: "Polish", flag: "🇵🇱", region: "PL" },
-];
-
-const selected = ref<string>("en");
-
-const currentLanguage = ref<{
-    code: string;
-    label: string;
-    flag: string;
-    region: string;
-}>({ code: "en", label: "English", flag: "🇺🇸", region: "EN" });
-
-watch(selected, (newCode) => {
-    currentLanguage.value = languages.find((l) => l.code === newCode)!;
-    locale.value = newCode;
-});
 
 const themeStore = useThemeStore();
 
@@ -106,36 +89,36 @@ const navElements = computed(() => [
             },
             {
                 index: 7,
-                name: t("nav.desktop.workstation"),
+                name: "Workstation",
                 link: "/desktop/workstation",
             },
         ],
     },
     {
         index: 8,
-        name: t("nav.peripherials.name"),
+        name: "Peripherials",
         link: "/peripheral",
         subnames: [
             {
                 index: 9,
-                name: t("nav.peripherials.mouse"),
+                name: "Mouse",
                 link: "/peripheral/mouse",
             },
             {
                 index: 10,
-                name: t("nav.peripherials.keyboard"),
+                name: "Keyboard",
                 link: "/peripheral/keyboard",
             },
             {
                 index: 11,
-                name: t("nav.peripherials.headset"),
+                name: "Headset",
                 link: "/peripheral/headset",
             },
         ],
     },
     {
         index: 12,
-        name: t("nav.server.name"),
+        name: "Server",
         link: "/server",
         subnames: [
             {
@@ -145,12 +128,33 @@ const navElements = computed(() => [
             },
             {
                 index: 14,
-                name: t("nav.server.business"),
+                name: "Business",
                 link: "/server/businnes",
             },
         ],
     },
 ]);
+
+const loginForm = z.object({
+    email: z.string()
+        .min(1, { message: "Email address is required" })
+        .email("Must be a valid email address"),
+    password: z.string()
+        .min(6, { message: "Password must be at least 6 characters" })
+})
+
+type loginFormValue = z.infer<typeof loginForm>
+
+const { handleSubmit, errors } = useForm<loginFormValue>({
+    validationSchema: toTypedSchema(loginForm)
+})
+
+const { value: email } = useField<string>("email")
+const { value: password } = useField<string>("password")
+
+const onSubmit = handleSubmit((data) => {
+    console.log(`Data: ${JSON.stringify(data, null, 2)}`)
+})
 </script>
 
 <template>
@@ -164,37 +168,8 @@ const navElements = computed(() => [
                         : (themeStore.mode = 'light')
                 "
             >
-                {{ t("theme") }}
+                Theme
             </Button>
-            <DropdownMenu>
-                <DropdownMenuTrigger as-child>
-                    <Button
-                        variant="secondary"
-                        className="w-48 justify-between flex items-center"
-                    >
-                        <span
-                            >{{ currentLanguage.flag }}
-                            {{ currentLanguage.label }}</span
-                        >
-                        <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50" />
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-48">
-                    <DropdownMenuItem
-                        v-for="lang in languages"
-                        :key="lang.code"
-                        className="flex justify-between"
-                    >
-                        <Button variant="link" @click="selected = lang.code">
-                            <span>{{ lang.flag }} {{ lang.label }}</span>
-                            <Check
-                                v-if="selected === lang.code"
-                                className="h-4 w-4"
-                            />
-                        </Button>
-                    </DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
         </div>
         <div class="flex-1">
             <InputGroup>
@@ -232,15 +207,17 @@ const navElements = computed(() => [
                                 <DialogHeader>
                                     <DialogTitle>Login form</DialogTitle>
                                 </DialogHeader>
-                                <form>
+                                <form @submit.prevent="onSubmit">
                                     <div class="grid gap-4 p-3">
                                         <div class="grid gap-3">
                                             <Label for="email-1">Email</Label>
                                             <Input
                                                 id="email-1"
+                                                v-model="email"
                                                 name="email"
                                                 type="email"
                                             />
+                                            <span class="text-red-500" v-if="errors.email">{{ errors.email }}</span>
                                         </div>
                                         <div class="grid gap-3">
                                             <Label for="password-1"
@@ -248,18 +225,20 @@ const navElements = computed(() => [
                                             >
                                             <Input
                                                 id="password-1"
+                                                v-model="password"
                                                 name="password"
                                                 type="password"
                                             />
+                                            <span class="text-red-500" v-if="errors.password">{{ errors.password }}</span>
                                         </div>
                                     </div>
+                                    <DialogFooter>
+                                        <Button type="submit">Login</Button>
+                                        <DialogClose as-child>
+                                            <RouterLink to="/register"><Button variant="outline">Register</Button></RouterLink>
+                                        </DialogClose>
+                                    </DialogFooter>
                                 </form>
-                                <DialogFooter>
-                                    <Button type="submit">Login</Button>
-                                    <DialogClose as-child>
-                                        <RouterLink to="/register"><Button variant="outline">Register</Button></RouterLink>
-                                    </DialogClose>
-                                </DialogFooter>
                             </DialogContent>
                         </Dialog>
                     </DropdownMenuItem>
