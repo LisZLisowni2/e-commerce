@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
-    public function show() {
-        return Product::all();
+    public function index() {
+        return response()->json(["products" => Product::all()]);
     }
 }

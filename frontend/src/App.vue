@@ -140,7 +140,7 @@ const loginForm = z.object({
         .min(1, { message: "Email address is required" })
         .email("Must be a valid email address"),
     password: z.string()
-        .min(6, { message: "Password must be at least 6 characters" })
+        .min(8, { message: "Password must be at least 8 characters" })
 })
 
 type loginFormValue = z.infer<typeof loginForm>
