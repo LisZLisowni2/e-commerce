@@ -33,7 +33,7 @@ const { data: countryCode, isLoading } = useCountryCode();
                 class="text-sm text-gray-500 mt-1"
                 data-testid="lowest-price"
             >
-                Najniższa cena z 30 dni: {{ lowestPrice30Days }} zł
+                The lowest price in 30 days range: {{ lowestPrice30Days }} zł
             </p>
         </CardContent>
     </Card>

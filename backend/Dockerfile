@@ -18,14 +18,18 @@ FROM php:8.4-fpm-alpine3.22 AS runner
 WORKDIR /app
 
 RUN apk add --no-cache \
+    $PHPIZE_DEPS \
     libpq-dev \
     libpng-dev \
     libzip-dev \
     zip \
     unzip \
     oniguruma-dev \
+    php-redis \
     curl && \ 
-        docker-php-ext-install pdo pdo_pgsql mbstring zip exif pcntl gd
+    pecl install redis && \
+    docker-php-ext-enable redis && \
+    docker-php-ext-install pdo pdo_pgsql mbstring zip exif pcntl gd
 
 COPY --from=build /app .
 
