@@ -46,6 +46,10 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useUser } from "./composables/useUser.ts";
+import { onMounted } from "vue";
+
+onMounted(() => useUser())
 
 const themeStore = useThemeStore();
 

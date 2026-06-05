@@ -30,25 +30,37 @@ class AuthController extends Controller
             'password' => ['required', 'min:8']
         ]);
 
-        if (! Auth::attempt($request->only('email', 'password'))) {
-            throw ValidationException::withMessages([
-                'email' => __('auth.failed')
-            ]);
+        $user = User::where('email', $request->email)->first();
+
+        if (! $user) {
+            return response()->json([
+                'message' => 'User with that email does not exist'
+            ], 422);
         }
 
-        $token = Auth::user()->createToken('token')->plainTextToken;
+        if (! Hash::check($request->password, $user->password)) {
+            return response()->json([
+                'message' => 'Invalid password'
+            ], 422);
+        }
+
+        $token = $user->createToken('token')->plainTextToken;
 
         return response()->json(['token' => $token]);
     }
 
-    public function logout(Request $request): JsonResponse
+    public function logout(): JsonResponse
     {
-        $request->user()->currentAccessToken()->delete();
+        $token = Auth::user()->currentAccessToken();
+
+        if (method_exists($token, "delete")) {
+            $token->delete();
+        }
 
         return response()->json(['message' => 'Logged out successfully']);
     }
 
-    public function user(Request $request): JsonResponse
+    public function show(Request $request): JsonResponse
     {
         return response()->json($request->user());
     }

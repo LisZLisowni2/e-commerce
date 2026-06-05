@@ -8,10 +8,9 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Stevebauman\Location\Facades\Location;
 
-Route::middleware(['auth:sanctum'])->group(function () {    
+Route::middleware('auth:sanctum')->group(function () {    
     Route::post('/logout', [AuthController::class, 'logout']);
-    
-    Route::get('/user', [AuthController::class, 'user']);
+    Route::get('/user', [AuthController::class, 'show']);
 });
 
 Route::get("/geo/{ip}", function(Request $request, string $ip) {
