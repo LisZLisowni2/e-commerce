@@ -33,8 +33,10 @@ RUN apk add --no-cache \
 
 COPY --from=build /app .
 
-RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache \
-    && chmod -R 775 /app/storage /app/bootstrap/cache
+RUN chown -R www-data:www-data /app \
+    && chmod -R 775 /app
+
+USER www-data
 
 EXPOSE 9000
 CMD ["php-fpm"]
