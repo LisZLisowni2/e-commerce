@@ -16,11 +16,16 @@ class ScopeMiddleware
      */
     public function handle(Request $request, Closure $next, ScopeEnum $requiredScope): Response
     {
+        if ($request->user()->scope == ScopeEnum::ROOT) {
+            return $next($request);
+        }
+
         if ($request->user()->scope != $requiredScope) {
             return response()->json([
                 'Unauthorized access to this resource.'
             ], 403);
         }
+        
         return $next($request);
     }
 }

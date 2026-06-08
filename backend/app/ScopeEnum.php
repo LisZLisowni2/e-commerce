@@ -8,4 +8,5 @@ enum ScopeEnum: string
     case ADMIN = "admin";
     case VENDOR = "vendor";
     case SUPPORT = "support";
+    case ROOT = "root";
 }
