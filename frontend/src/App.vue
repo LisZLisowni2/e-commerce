@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { useI18n } from "vue-i18n";
 import { useForm, useField } from "vee-validate";
+import { useMutation, useQueryClient } from "@tanstack/vue-query";
 import { toTypedSchema } from "@vee-validate/zod";
 import * as z from "zod";
-import { computed, ref, watch } from "vue";
+import { computed, onMounted } from "vue";
 import { RouterView } from "vue-router";
 import { useThemeStore } from "./stores/useThemeStore";
 import Button from "./components/ui/button/Button.vue";
@@ -23,8 +23,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import IconDropdown from "./components/navigation/IconDropdown.vue";
 import {
-    ChevronsUpDown,
-    Check,
     Search,
     CircleUserRound,
     Phone,
@@ -47,7 +45,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useUser } from "./composables/useUser.ts";
-import { onMounted } from "vue";
+import api from "./api.ts";
+import { useAuthStore } from "./stores/useAuthStore.ts";
+import router from "./router/router.ts";
+
+const authStore = useAuthStore()
 
 onMounted(() => useUser())
 
@@ -153,12 +155,52 @@ const { handleSubmit, errors } = useForm<loginFormValue>({
     validationSchema: toTypedSchema(loginForm)
 })
 
+const queryClient = useQueryClient();
 const { value: email } = useField<string>("email")
 const { value: password } = useField<string>("password")
 
-const onSubmit = handleSubmit((data) => {
-    console.log(`Data: ${JSON.stringify(data, null, 2)}`)
+const { refetch: fetchUserProfile } = useUser()
+
+const { mutate, isPending, isError, error } = useMutation({
+    mutationFn: async (credentials: loginFormValue) => {
+        const { data } = await api.post("/login", credentials)
+        return data
+    },
+    mutationKey: ['user'],
+    onSuccess: async (res) => {
+        authStore.setToken(res.token)
+        queryClient.invalidateQueries()
+        await fetchUserProfile()
+    },
+    onError: () => {
+        console.error(`Authentication failed. Email or password wrong`)
+    }
 })
+
+const onSubmit = handleSubmit((data) => {
+    mutate({ email: data.email, password: data.password })
+})
+
+const { mutate: logoutMutate } = useMutation({
+    mutationFn: async () => {
+        const { data } = await api.post("/logout")
+        return data
+    },
+    mutationKey: ['user'],
+    onSuccess: async () => {
+        authStore.logout()
+
+        router.push("/")
+        // window.location.reload()
+    },
+    onError: () => {
+        console.error(`Logout failed. Server error probably`)
+    }
+})
+
+const onLogoutSubmit = () => {
+    logoutMutate()
+}
 </script>
 
 <template>
@@ -201,7 +243,7 @@ const onSubmit = handleSubmit((data) => {
                 <template #icon>
                     <CircleUserRound />
                 </template>
-                <template #content>
+                <template v-if="!authStore.isAuthenticated" #content>
                     <DropdownMenuItem @select.prevent>
                         <Dialog>
                             <DialogTrigger as-child>
@@ -234,13 +276,46 @@ const onSubmit = handleSubmit((data) => {
                                                 type="password"
                                             />
                                             <span class="text-red-500" v-if="errors.password">{{ errors.password }}</span>
+                                            <span class="text-red-500" v-if="isError">{{ error }}</span>
                                         </div>
                                     </div>
                                     <DialogFooter>
-                                        <Button type="submit">Login</Button>
+                                        <Button type="submit" v-if="!isPending">Login</Button>
+                                        <Button v-else variant="ghost">Login</Button>
                                         <DialogClose as-child>
                                             <RouterLink to="/register"><Button variant="outline">Register</Button></RouterLink>
                                         </DialogClose>
+                                    </DialogFooter>
+                                </form>
+                            </DialogContent>
+                        </Dialog>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem @select.prevent>
+                        <RouterLink to="/register">
+                                <span class="w-full cursor-pointer">Register</span>
+                        </RouterLink>
+                    </DropdownMenuItem>
+                </template>
+                <template v-else #content>
+                    <DropdownMenuItem @select.prevent>
+                        <RouterLink to="/profile">
+                            <span class="w-full cursor-pointer">Profile</span>
+                        </RouterLink>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem @select.prevent>
+                        <Dialog>
+                            <DialogTrigger as-child>
+                                <span class="w-full cursor-pointer">Logout</span>
+                            </DialogTrigger>
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>Logout</DialogTitle>
+                                </DialogHeader>
+                                <form @submit.prevent="onLogoutSubmit">
+                                    <h1>Are you sure?</h1>
+                                    <DialogFooter>
+                                        <Button type="submit" @click="authStore.logout()">Yes</Button>
+                                        <Button type="clear" variant="ghost">No</Button>
                                     </DialogFooter>
                                 </form>
                             </DialogContent>
