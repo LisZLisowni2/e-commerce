@@ -39,8 +39,8 @@ Artisan::command('make:root', function () {
         'name' => $name,
         'email' => $email,
         'password' => Hash::make($password),
-        'scope' => ScopeEnum::ADMIN,
+        'scope' => ScopeEnum::SUPERADMIN,
     ]);
 
     $this->info("Success! Super-Admin account created successfully with ID: {$admin->id}");
-})->purpose('Create a super-user account');
+})->purpose('Create a master super-user account');

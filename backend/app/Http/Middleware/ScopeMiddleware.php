@@ -16,7 +16,7 @@ class ScopeMiddleware
      */
     public function handle(Request $request, Closure $next, ScopeEnum $requiredScope): Response
     {
-        if ($request->user()->scope == ScopeEnum::ROOT) {
+        if ($request->user()->scope == ScopeEnum::SUPERADMIN) {
             return $next($request);
         }
 
@@ -25,7 +25,7 @@ class ScopeMiddleware
                 'Unauthorized access to this resource.'
             ], 403);
         }
-        
+
         return $next($request);
     }
 }
