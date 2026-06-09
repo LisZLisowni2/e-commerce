@@ -3,11 +3,6 @@ import api from "@/api";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { computed } from "vue";
 
-interface Data {
-    email: string,
-    password: string
-}
-
 export function useUser() {
     const authStore = useAuthStore()
 

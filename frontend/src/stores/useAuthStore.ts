@@ -3,9 +3,10 @@ import { ref, computed } from "vue"
 
 interface User {
     id: number,
-    username: string,
+    name: string,
     email: string,
     password: string,
+    scope: string,
 }
 
 export const useAuthStore = defineStore('auth', () => {

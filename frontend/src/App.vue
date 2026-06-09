@@ -53,6 +53,9 @@ const authStore = useAuthStore()
 
 onMounted(() => useUser())
 
+console.log(authStore.user)
+console.log(authStore.token)
+
 const themeStore = useThemeStore();
 
 const navElements = computed(() => [

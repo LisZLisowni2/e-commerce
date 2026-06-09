@@ -9,5 +9,5 @@ test('display 3 products', function() {
     $response = $this->getJson('/api/products');
 
     $response->assertStatus(200);
-    expect($response->json()["products"]->count())->toBe(3);
+    expect(count($response->json()["products"]))->toBe(3);
 });

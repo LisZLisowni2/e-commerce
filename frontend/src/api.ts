@@ -7,7 +7,7 @@ const isLocalhost = window.location.hostname === "localhost"
 
 const api = axios.create({
     baseURL: API_URI,
-    withCredentials: isLocalhost
+    withCredentials: isLocalhost,
 })
 
 api.interceptors.request.use((config) => {
@@ -16,6 +16,8 @@ api.interceptors.request.use((config) => {
         config.headers.Authorization = `Bearer ${token}`
     }
 
+    config.headers.Accept = "application/json"
+    config.headers["Content-Type"] = "application/json"
     return config;
 })
 
