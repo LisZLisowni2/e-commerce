@@ -9,10 +9,10 @@ export function useUser() {
     return useQuery({
         queryKey: ['user'],
         queryFn: async () => {
-            const response = await api.get("/user")
+            const { data } = await api.get("/user")
             
-            authStore.setUser(response.data)
-            return response.data
+            authStore.setUser(data)
+            return data
         },
         retry: false,
         enabled: computed(() => authStore.isAuthenticated)

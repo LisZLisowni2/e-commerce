@@ -18,6 +18,6 @@ const queryClient = new QueryClient({
 })
 
 app.use(pinia)
-app.use(VueQueryPlugin, { queryClient })
 app.use(router)
+app.use(VueQueryPlugin, { queryClient })
 app.mount('#app')

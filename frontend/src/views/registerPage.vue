@@ -29,7 +29,7 @@ const profileSchema = z.object({
         .min(1, { message: "Please confirm your password" }),
 }).refine((data) => data.password === data.password_confirmation, {
   message: "Passwords don't match",
-  path: ['confirmPassword'], 
+  path: ['password_confirmation'], 
 })
 
 type ProfileFormValue = z.infer<typeof profileSchema>
@@ -44,11 +44,11 @@ const { refetch: fetchUserProfile } = useUser()
 const { value: name } = useField<string>('name')
 const { value: email } = useField<string>('email')
 const { value: password } = useField<string>('password')
-const { value: password_confirmation } = useField<string>('confirmPassword')
+const { value: password_confirmation } = useField<string>('password_confirmation')
 
 const queryClient = useQueryClient()
 
-const { mutate, isError, error} = useMutation({
+const { mutate, isError, error } = useMutation({
     mutationFn: async (credentials: ProfileFormValue) => {
         const { data } = await api.post("/register", credentials)
         return data
@@ -81,7 +81,7 @@ import { Button } from "@/components/ui/button"
             <h1>Register form</h1>
             <form @submit.prevent="onSubmit" class="py-10 grid gap-4">
                 <div class="grid gap-3">
-                    <Label for="name">name</Label>
+                    <Label for="name">Name</Label>
                     <Input id="name" v-model="name" type="text" :class="{ 'border-red-500': errors.name }" />
                     <span class="text-red-500" v-if="errors.name">{{ errors.name }}</span>
                 </div>

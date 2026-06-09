@@ -53,9 +53,6 @@ const authStore = useAuthStore()
 
 onMounted(() => useUser())
 
-console.log(authStore.user)
-console.log(authStore.token)
-
 const themeStore = useThemeStore();
 
 const navElements = computed(() => [
@@ -323,6 +320,11 @@ const onLogoutSubmit = () => {
                                 </form>
                             </DialogContent>
                         </Dialog>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                        <RouterLink to="/dashboard">
+                            <span class="w-full cursor-pointer">Dashboard</span>
+                        </RouterLink>
                     </DropdownMenuItem>
                 </template>
             </IconDropdown>

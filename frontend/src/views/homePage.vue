@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { Swiper, SwiperSlide } from "swiper/vue";
 import { Navigation, Pagination, A11y } from "swiper/modules";
-import Slide from "@/components/swiper/Slide.vue";
 import ItemCard from "@/components/ui/ItemCard.vue";
 
 import "swiper/css";
