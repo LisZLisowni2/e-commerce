@@ -308,6 +308,21 @@ const onLogoutSubmit = () => {
                             <span class="w-full cursor-pointer">Profile</span>
                         </RouterLink>
                     </DropdownMenuItem>
+                    <DropdownMenuItem v-if="authStore.user?.scope === 'admin' || authStore.user?.scope === 'superadmin'" @select.prevent>
+                        <RouterLink to="/admin/dashboard">
+                            <span class="w-full cursor-pointer">Admin Dashboard</span>
+                        </RouterLink>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem v-if="authStore.user?.scope === 'support' || authStore.user?.scope === 'superadmin'" @select.prevent>
+                        <RouterLink to="/support/dashboard">
+                            <span class="w-full cursor-pointer">Support Dashboard</span>
+                        </RouterLink>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem v-if="authStore.user?.scope === 'vendor' || authStore.user?.scope === 'superadmin'" @select.prevent>
+                        <RouterLink to="/vendor/dashboard">
+                            <span class="w-full cursor-pointer">Vendor Dashboard</span>
+                        </RouterLink>
+                    </DropdownMenuItem>
                     <DropdownMenuItem @select.prevent>
                         <Dialog>
                             <DialogTrigger as-child>
