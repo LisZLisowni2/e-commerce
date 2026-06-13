@@ -51,7 +51,13 @@ import router from "./router/router.ts";
 
 const authStore = useAuthStore()
 
-onMounted(() => useUser())
+onMounted(async () => {
+    const { error } = useUser()
+
+    if (error) {
+        authStore.logout()
+    }
+})
 
 const themeStore = useThemeStore();
 

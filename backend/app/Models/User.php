@@ -4,11 +4,13 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 
+use App\AddressType;
 use App\ScopeEnum;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -53,5 +55,22 @@ class User extends Authenticatable
             'password' => 'hashed',
             'scope' => ScopeEnum::class
         ];
+    }
+
+    /**
+     * Get all of the user's saved addresses.
+     */
+    public function addresses(): HasMany {
+        return $this->hasMany(Address::class);
+    }
+
+    /**
+     * Get the user's default shipping address.
+     */
+    public function defaultShippingAddress() {
+        return $this->hasMany(Address::class)
+                    ->where('address_type', AddressType::SHIPPING)
+                    ->where('is_default', true)
+                    ->limit(1);
     }
 }

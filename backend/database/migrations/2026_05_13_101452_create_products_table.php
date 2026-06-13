@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('imageURL');
             $table->float('last30DaysPrice');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
