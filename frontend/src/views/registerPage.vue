@@ -5,16 +5,8 @@ import { useQueryClient, useMutation } from "@tanstack/vue-query";
 import { toTypedSchema } from "@vee-validate/zod";
 import * as z from "zod";
 import api from "@/api";
-import { useAuthStore } from "@/stores/useAuthStore";
-import router from "@/router/router";
-import { useUser } from "@/composables/useUser";
 
 const profileSchema = z.object({
-    name: z
-        .string()
-        .min(3, { message: "Name must be at least 3 characters" })
-        .max(20, { message: "Name cannot exceed 20 characters" }),
-
     email: z
         .string()
         .min(1, { message: "Email is required" })
@@ -34,17 +26,14 @@ const profileSchema = z.object({
 
 type ProfileFormValue = z.infer<typeof profileSchema>
 
-const authStore = useAuthStore()
 const { handleSubmit, errors } = useForm<ProfileFormValue>({
     validationSchema: toTypedSchema(profileSchema)
 })
 
-const { refetch: fetchUserProfile } = useUser()
-
-const { value: name } = useField<string>('name')
 const { value: email } = useField<string>('email')
 const { value: password } = useField<string>('password')
 const { value: password_confirmation } = useField<string>('password_confirmation')
+const successMessage = ref<string>()
 
 const queryClient = useQueryClient()
 
@@ -54,24 +43,22 @@ const { mutate, isError, error } = useMutation({
         return data
     },
     onSuccess: async (res) => {
-        authStore.setToken(res.token)
+        successMessage.value = res.message
 
         queryClient.invalidateQueries()
-
-        await fetchUserProfile()
-
-        router.push("/")
-        window.location.reload()
     }
 })
 
 const onSubmit = handleSubmit((values) => {
-    mutate({ name: values.name, email: values.email, password: values.password, password_confirmation: values.password_confirmation })
+    successMessage.value = ""
+
+    mutate({ email: values.email, password: values.password, password_confirmation: values.password_confirmation })
 })
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button"
+import { ref } from "vue";
 
 </script>
 
@@ -80,11 +67,6 @@ import { Button } from "@/components/ui/button"
         <div class="md:w-1/3">
             <h1>Register form</h1>
             <form @submit.prevent="onSubmit" class="py-10 grid gap-4">
-                <div class="grid gap-3">
-                    <Label for="name">Name</Label>
-                    <Input id="name" v-model="name" type="text" :class="{ 'border-red-500': errors.name }" />
-                    <span class="text-red-500" v-if="errors.name">{{ errors.name }}</span>
-                </div>
                 <div class="grid gap-3">
                     <Label for="email">Email</Label>
                     <Input id="email" v-model="email" type="text" :class="{ 'border-red-500': errors.email }" />
@@ -102,6 +84,7 @@ import { Button } from "@/components/ui/button"
                 </div>
                 <Button>Register</Button>
                 <span class="text-red-500" v-if="isError">{{ error }}</span>
+                <span class="text-green-500" v-if="successMessage">{{ successMessage }}</span>
             </form>
         </div> 
     </Section>

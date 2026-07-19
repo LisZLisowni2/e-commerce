@@ -13,15 +13,13 @@ class AuthController extends Controller
 {
     public function register(Request $request): JsonResponse {
         $data = $request->validate([
-            'name'     => ['required', 'string', 'max:255'],
             'email'    => ['required', 'email', 'unique:users'],
             'password' => ['required', 'confirmed', 'min:8'],
         ]);
 
         $user = User::create([...$data, 'password' => Hash::make($data['password'])]);
-        $token = $user->createToken('token')->plainTextToken;
-
-        return response()->json(['token' => $token], 201);
+        
+        return response()->json(["message" => "User created successfully"], 201);
     }
 
     public function login(Request $request): JsonResponse {

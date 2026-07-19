@@ -342,11 +342,6 @@ const onLogoutSubmit = () => {
                             </DialogContent>
                         </Dialog>
                     </DropdownMenuItem>
-                    <DropdownMenuItem>
-                        <RouterLink to="/dashboard">
-                            <span class="w-full cursor-pointer">Dashboard</span>
-                        </RouterLink>
-                    </DropdownMenuItem>
                 </template>
             </IconDropdown>
             <IconDropdown>
