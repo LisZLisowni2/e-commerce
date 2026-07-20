@@ -2,6 +2,21 @@
     import { useAuthStore } from '@/stores/useAuthStore';
 
     const authStore = useAuthStore();
+
+    const options = [
+        {
+            "label": "Account details",
+            "path": "/profile"
+        },
+        {
+            "label": "Personal data",
+            "path": "/profile/personal"
+        },
+        {
+            "label": "Addresses",
+            "path": "/profile/addresses"
+        }
+    ]
 </script>
 
 <template>
@@ -11,20 +26,15 @@
     <div v-else>
         <div class="w-3/4 m-auto grid grid-cols-1 md:grid-cols-[1fr_4fr] gap-4">
             <aside>
-                <ul class="list-none *:py-2 bg-white dark:bg-zinc-950 text-center">
-                    <li>Details</li>
-                    <li>Details</li>
-                    <li>Details</li>
-                    <li>Details</li>
-                    <li>Details</li>
-                    <li>Details</li>
+                <ul class="list-none bg-white dark:bg-zinc-950 text-center">
+                    <RouterLink v-for="option in options" :to="option.path">
+                        <li class="py-2 hover:bg-amber-500 hover:text-white hover:scale-105 transition-all">
+                            {{ option.label }}
+                        </li>
+                    </RouterLink>
                 </ul>
             </aside>
-            <section class="p-10">
-                <h1 class="text-4xl">Details</h1>
-                <p>{{ authStore.user?.name }}</p>
-                <p>{{ authStore.user?.email }}</p>
-            </section>
+            <RouterView />
         </div>
     </div>
 </template>

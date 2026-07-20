@@ -53,8 +53,8 @@ services:
       - pgdata:/var/lib/postgresql
     secrets:
       - pgsql_password
-    environment:
-      - POSTGRES_PASSWORD_FILE=/run/secrets/pgsql_password
+    env_file:
+      - ./db/.env
     networks:
       - default
   redis:

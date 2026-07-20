@@ -32,7 +32,21 @@ const router = createRouter({
         {
             path: '/profile',
             name: 'profile',
-            component: () => import("@/views/dashboard/profile.vue")
+            component: () => import("@/views/dashboard/profile.vue"),
+            children: [
+                {
+                    path: '',
+                    component: () => import("@/views/dashboard/profileSubpages/account.vue"),
+                },
+                {
+                    path: 'personal',
+                    component: () => import("@/views/dashboard/profileSubpages/personal.vue"),
+                },
+                {
+                    path: 'addresses',
+                    component: () => import("@/views/dashboard/profileSubpages/addresses.vue"),
+                }
+            ]
         }
     ]
 })
