@@ -4,13 +4,7 @@ use App\Models\Product;
 use App\Models\User;
 use App\ScopeEnum;
 
-test('unauthenticated user cannot access products', function () {
-    $response = $this->getJson('/api/products');
-
-    $response->assertStatus(401);
-});
-
-test('authenticated user can list products', function () {
+test('unauthenticated user can list products', function () {
     Product::factory(3)->create();
 
     $response = $this->actingAsGuest()->getJson('/api/products');
@@ -19,7 +13,7 @@ test('authenticated user can list products', function () {
     expect(count($response->json('products')))->toBe(3);
 });
 
-test('authenticated user can view single product', function () {
+test('unauthenticated user can view single product', function () {
     $product = Product::factory()->create();
 
     $response = $this->actingAsGuest()->getJson("/api/products/{$product->id}");

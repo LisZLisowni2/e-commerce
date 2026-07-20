@@ -57,10 +57,8 @@ services:
       timeout: 5s
     volumes:
       - pgdata-dev:/var/lib/postgresql
-    secrets:
-      - pgsql_password
-    environment:
-      - POSTGRES_PASSWORD_FILE=/run/secrets/pgsql_password
+    env_file:
+      - ./db/.env
     networks:
       - default
   redis:
@@ -93,7 +91,3 @@ volumes:
 networks:
   default:
     driver: overlay
-
-secrets:
-  pgsql_password:
-    file: pgsql_password.txt
