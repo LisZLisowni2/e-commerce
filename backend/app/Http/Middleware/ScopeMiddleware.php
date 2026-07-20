@@ -14,18 +14,22 @@ class ScopeMiddleware
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-    public function handle(Request $request, Closure $next, ScopeEnum $requiredScope): Response
+    public function handle(Request $request, Closure $next, string ...$requiredScopes): Response
     {
-        if ($request->user()->scope == ScopeEnum::SUPERADMIN) {
+        if ($request->user()->scope === ScopeEnum::SUPERADMIN) {
             return $next($request);
         }
 
-        if ($request->user()->scope != $requiredScope) {
-            return response()->json([
-                'Unauthorized access to this resource.'
-            ], 403);
+        $userScope = $request->user()->scope;
+        $allowedScopes = array_map(fn (string $scope) => ScopeEnum::tryFrom($scope), $requiredScopes);
+        $allowedScopes = array_filter($allowedScopes);
+
+        if (in_array($userScope, $allowedScopes)) {
+            return $next($request);
         }
 
-        return $next($request);
+        return response()->json([
+            'message' => 'Unauthorized access to this resource.'
+        ], 403);
     }
 }

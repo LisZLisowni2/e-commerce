@@ -1,36 +1,27 @@
 <?php
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\App;
 use App\Http\Controllers\ProductController;
 
-Route::middleware('auth:sanctum')->group(function () {    
-    Route::post('/logout', [AuthController::class, 'logout']);
-    Route::get('/user', [AuthController::class, 'show']);
-});
-
 Route::post('/register', [AuthController::class, 'register']);
-
 Route::post('/login', [AuthController::class, 'login']);
 
-Route::get("/", function() {
+Route::get("/", function () {
     return response()->json(["Laravel" => App::version()]);
 });
 
-Route::get("/products", [ProductController::class, "index"]);
+Route::get('/products', [ProductController::class, 'index']);
+Route::get('/products/{product}', [ProductController::class, 'show']);
 
-// Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])
-//     ->name('password.email');
+Route::middleware('auth:sanctum')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/user', [AuthController::class, 'show']);
 
-// Route::post('/reset-password', [NewPasswordController::class, 'store'])
-//     ->name('password.store');
-
-// Route::get('/verify-email/{id}/{hash}', VerifyEmailController::class)
-//     ->middleware(['auth', 'signed', 'throttle:6,1'])
-//     ->name('verification.verify');
-
-// Route::post('/email/verification-notification', [EmailVerificationNotificationController::class, 'store'])
-//     ->middleware(['auth', 'throttle:6,1'])
-//     ->name('verification.send');
+    Route::middleware('scope:admin,vendor,superadmin')->group(function () {
+        Route::post('/products', [ProductController::class, 'store']);
+        Route::put('/products/{product}', [ProductController::class, 'update']);
+        Route::delete('/products/{product}', [ProductController::class, 'destroy']);
+    });
+});
