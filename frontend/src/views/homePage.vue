@@ -2,6 +2,7 @@
 import { Swiper, SwiperSlide } from "swiper/vue";
 import { Navigation, Pagination, A11y } from "swiper/modules";
 import ItemCard from "@/components/ui/ItemCard.vue";
+import { useProducts } from "@/composables/useProducts";
 
 import "swiper/css";
 import "swiper/css/navigation";
@@ -9,6 +10,8 @@ import "swiper/css/pagination";
 
 import Section from "@/components/ui/Section.vue";
 const modules = [Navigation, Pagination, A11y];
+
+const { data: products, isLoading, error } = useProducts();
 </script>
 
 <template>
@@ -41,8 +44,19 @@ const modules = [Navigation, Pagination, A11y];
             :scrollbar="{ draggable: true }"
             :autoplay="{ delay: 5000 }"
             class="m-8"
+            v-if="!isLoading"
         >
+            <SwiperSlide v-if="!error" v-for="product in products" :key="product.id">
+                <ItemCard 
+                    :title="product.name"
+                    :price="product.price"
+                    :image-url="product.imageURL"
+                    :lowest-price30-days="product.last30DaysPrice"
+                />
+            </SwiperSlide>
+            <p class="text-red-500" v-else>Error!</p>
         </swiper>
+        <p v-else>Loading...</p>
         <div class="m-5 overflow-auto whitespace-nowrap p-5"></div>
     </Section>
 </template>

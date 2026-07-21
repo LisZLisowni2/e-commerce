@@ -76,3 +76,10 @@ scripts/restartBackendNginx.sh  # Restart nginx service
 - Auth tokens stored in localStorage as token
 - User roles: user, admin, vendor, support, superadmin
 - Passwords require min 8 characters with confirmation
+
+## Avoid reading below files
+
+- .env
+- .env.dev
+- *.key
+- *.pem
