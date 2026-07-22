@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Resources\ProductResource;
 use App\Models\Product;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -11,12 +10,12 @@ class ProductController extends Controller
 {
     public function index(): JsonResponse
     {
-        return response()->json(["products" => ProductResource::collection(Product::all())]);
+        return response()->json(["products" => Product::all()]);
     }
 
     public function show(Product $product): JsonResponse
     {
-        return response()->json(new ProductResource($product));
+        return response()->json($product);
     }
 
     public function store(Request $request): JsonResponse
@@ -31,7 +30,7 @@ class ProductController extends Controller
 
         $product = Product::create($data);
 
-        return response()->json(new ProductResource($product), 201);
+        return response()->json($product, 201);
     }
 
     public function update(Request $request, Product $product): JsonResponse
@@ -46,7 +45,7 @@ class ProductController extends Controller
 
         $product->update($data);
 
-        return response()->json(new ProductResource($product));
+        return response()->json($product);
     }
 
     public function destroy(Product $product): JsonResponse

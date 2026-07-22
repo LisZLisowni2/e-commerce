@@ -2,11 +2,16 @@ import { mount } from "@vue/test-utils";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import ItemCard from "@/components/ui/ItemCard.vue";
 import { useCountryCode } from "@/composables/useCountryCode";
+import { useImageProduct } from "@/composables/useImageProduct";
 
 // Mock the composable module
 vi.mock("@/composables/useCountryCode", () => ({
     useCountryCode: vi.fn(),
 }));
+
+vi.mock("@/composables/useImageProduct", () => ({
+    useImageProduct: vi.fn(),
+}))
 
 const mockProps = {
     title: "RTX 5070",
@@ -24,6 +29,11 @@ const mountCard = (propsOverrides = {}) =>
 describe("ItemCard.vue", () => {
     beforeEach(() => {
         vi.clearAllMocks();
+
+        vi.mocked(useImageProduct).mockReturnValue({
+            data: "/rtx.jpg",
+            isLoading: false,
+        } as any)
     });
 
     it("renders title and price", () => {
@@ -59,7 +69,7 @@ describe("ItemCard.vue", () => {
             data: undefined,
             isLoading: true,
         } as any);
-
+        
         const wrapper = mountCard();
         expect(wrapper.find('[data-testid="lowest-price"]').exists()).toBe(
             false,

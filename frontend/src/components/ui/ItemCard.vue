@@ -1,5 +1,5 @@
 <script setup lang="ts">
-defineProps<{
+const props = defineProps<{
     title: string;
     price: number;
     lowestPrice30Days?: number;
@@ -9,7 +9,10 @@ defineProps<{
 import { Card, CardContent } from "@/components/ui/card";
 
 import { useCountryCode } from "@/composables/useCountryCode";
+import { useImageProduct } from "@/composables/useImageProduct";
 const { data: countryCode, isLoading } = useCountryCode();
+
+const { data: image, isLoading: isImageLoading } = useImageProduct(props.imageUrl);
 
 </script>
 
@@ -18,12 +21,11 @@ const { data: countryCode, isLoading } = useCountryCode();
         <CardContent
             class="text-center flex flex-col justify-center items-center"
         >
-            <img
-                :src="imageUrl"
+            <img v-if="!isImageLoading"
+                :src="image"
                 :alt="`${title}-image`"
-                width="180"
-                class="p-2"
             />
+            <span v-else>Image loading...</span>
             <h2 class="text-xl">{{ title }}</h2>
             <p class="text-2xl font-bold">${{ price }}</p>
             <p v-if="isLoading">Loading...</p>

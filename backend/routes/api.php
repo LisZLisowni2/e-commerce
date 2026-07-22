@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\App;
@@ -10,6 +11,14 @@ Route::post('/login', [AuthController::class, 'login']);
 
 Route::get("/", function () {
     return response()->json(["Laravel" => App::version()]);
+});
+
+Route::get("/image/{path}", function ($path) {
+    if (!Storage::exists($path)) {
+        abort(404);
+    }
+
+    return Storage::response($path);
 });
 
 Route::get('/products', [ProductController::class, 'index']);

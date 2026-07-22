@@ -2,6 +2,8 @@ import { mount } from "@vue/test-utils";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import homePage from "@/views/homePage.vue";
 import { useProducts } from "@/composables/useProducts";
+import { useCountryCode } from "@/composables/useCountryCode";
+import { useImageProduct } from "@/composables/useImageProduct";
 
 vi.mock("@/composables/useProducts", () => ({
     useProducts: vi.fn(),
@@ -9,6 +11,10 @@ vi.mock("@/composables/useProducts", () => ({
 
 vi.mock("@/composables/useCountryCode", () => ({
     useCountryCode: vi.fn(),
+}));
+
+vi.mock("@/composables/useImageProduct", () => ({
+    useImageProduct: vi.fn(),
 }));
 
 const mockProducts = [
@@ -51,6 +57,16 @@ const mountHomePage = () =>
 describe("homePage.vue", () => {
     beforeEach(() => {
         vi.clearAllMocks();
+
+        vi.mocked(useCountryCode).mockReturnValue({
+            data: "US",
+            isLoading: false
+        } as any);
+
+        vi.mocked(useImageProduct).mockReturnValue({
+            data: undefined,
+            isLoading: true,
+        } as any);
     });
 
     it("renders the Latest section heading", () => {
