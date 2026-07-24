@@ -16,9 +16,6 @@ import {
     NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
 import {
-    DropdownMenu,
-    DropdownMenuTrigger,
-    DropdownMenuContent,
     DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import IconDropdown from "./components/navigation/IconDropdown.vue";
@@ -54,7 +51,7 @@ const authStore = useAuthStore()
 onMounted(async () => {
     const { error } = useUser()
 
-    if (error) {
+    if (error.value) {
         authStore.logout()
     }
 })
@@ -335,7 +332,7 @@ const onLogoutSubmit = () => {
                                 <form @submit.prevent="onLogoutSubmit">
                                     <h1>Are you sure?</h1>
                                     <DialogFooter>
-                                        <Button type="submit" @click="authStore.logout()">Yes</Button>
+                                        <Button type="submit">Yes</Button>
                                         <Button type="clear" variant="ghost">No</Button>
                                     </DialogFooter>
                                 </form>

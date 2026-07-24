@@ -52,7 +52,7 @@ describe("authGuard", () => {
     });
 
     it("allows access to public routes without auth", async () => {
-        const result = await router.push("/");
+        await router.push("/");
         expect(router.currentRoute.value.name).toBe("home");
     });
 

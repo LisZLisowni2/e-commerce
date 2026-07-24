@@ -23,10 +23,10 @@
     <div v-if="!authStore.user">
         <h1>Account not found</h1>
     </div>
-    <div v-else>
+    <div class="h-full" v-else>
         <div class="w-3/4 m-auto grid grid-cols-1 md:grid-cols-[1fr_4fr] gap-4">
-            <aside>
-                <ul class="list-none bg-white dark:bg-zinc-950 text-center">
+            <aside class="bg-white dark:bg-zinc-950">
+                <ul class="list-none text-center">
                     <RouterLink v-for="option in options" :to="option.path">
                         <li class="py-2 hover:bg-amber-500 hover:text-white hover:scale-105 transition-all">
                             {{ option.label }}

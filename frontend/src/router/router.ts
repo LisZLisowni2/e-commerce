@@ -88,7 +88,7 @@ export const authGuard: NavigationGuardWithThis<undefined> = async (to) => {
 
     if (to.meta.requiredRoles) {
         const userRole = authStore.user?.scope
-        if (!userRole || !(to.meta.requiredRoles as string[]).includes(userRole)) {
+        if (userRole && !(to.meta.requiredRoles as string[]).includes(userRole)) {
             return ROLE_DASHBOARD_MAP[userRole] ?? '/'
         }
     }

@@ -3,7 +3,6 @@ import { ref, computed } from "vue"
 
 interface User {
     id: number,
-    name: string,
     email: string,
     password: string,
     scope: string,
