@@ -1,20 +1,20 @@
 <?php
 
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
-use Illuminate\Support\Facades\App;
 use App\Http\Controllers\ProductController;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
-Route::get("/", function () {
-    return response()->json(["Laravel" => App::version()]);
+Route::get('/', function () {
+    return response()->json(['Laravel' => App::version()]);
 });
 
-Route::get("/image/{path}", function ($path) {
-    if (!Storage::exists($path)) {
+Route::get('/image/{path}', function ($path) {
+    if (! Storage::exists($path)) {
         abort(404);
     }
 
@@ -27,6 +27,9 @@ Route::get('/products/{product}', [ProductController::class, 'show']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'show']);
+    Route::put('/user/email', [AuthController::class, 'updateEmail']);
+    Route::put('/user/password', [AuthController::class, 'updatePassword']);
+    Route::put('/user/personal', [AuthController::class, 'updatePersonal']);
 
     Route::middleware('scope:admin,vendor,superadmin')->group(function () {
         Route::post('/products', [ProductController::class, 'store']);

@@ -20,7 +20,7 @@ use Laravel\Sanctum\HasApiTokens;
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, HasApiTokens;
+    use HasApiTokens, HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -31,6 +31,11 @@ class User extends Authenticatable
         'email',
         'password',
         'scope',
+        'first_name',
+        'last_name',
+        'phone',
+        'date_of_birth',
+        'gender',
     ];
 
     /**
@@ -42,7 +47,7 @@ class User extends Authenticatable
         'password',
         'remember_token',
     ];
-    
+
     /**
      * Get the attributes that should be cast.
      *
@@ -53,24 +58,26 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'scope' => ScopeEnum::class
+            'scope' => ScopeEnum::class,
         ];
     }
 
     /**
      * Get all of the user's saved addresses.
      */
-    public function addresses(): HasMany {
+    public function addresses(): HasMany
+    {
         return $this->hasMany(Address::class);
     }
 
     /**
      * Get the user's default shipping address.
      */
-    public function defaultShippingAddress() {
+    public function defaultShippingAddress()
+    {
         return $this->hasMany(Address::class)
-                    ->where('address_type', AddressType::SHIPPING)
-                    ->where('is_default', true)
-                    ->limit(1);
+            ->where('address_type', AddressType::SHIPPING)
+            ->where('is_default', true)
+            ->limit(1);
     }
 }

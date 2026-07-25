@@ -45,6 +45,7 @@ import { useUser } from "./composables/useUser.ts";
 import api from "./api.ts";
 import { useAuthStore } from "./stores/useAuthStore.ts";
 import router from "./router/router.ts";
+import FormField from "./components/ui/FormField.vue";
 
 const authStore = useAuthStore()
 
@@ -258,7 +259,7 @@ const onLogoutSubmit = () => {
                                 </DialogHeader>
                                 <form @submit.prevent="onSubmit">
                                     <div class="grid gap-4 p-3">
-                                        <div class="grid gap-3">
+                                        <FormField>
                                             <Label for="email-1">Email</Label>
                                             <Input
                                                 id="email-1"
@@ -267,8 +268,8 @@ const onLogoutSubmit = () => {
                                                 type="email"
                                             />
                                             <span class="text-red-500" v-if="errors.email">{{ errors.email }}</span>
-                                        </div>
-                                        <div class="grid gap-3">
+                                        </FormField>
+                                        <FormField>
                                             <Label for="password-1"
                                                 >Password</Label
                                             >
@@ -280,7 +281,7 @@ const onLogoutSubmit = () => {
                                             />
                                             <span class="text-red-500" v-if="errors.password">{{ errors.password }}</span>
                                             <span class="text-red-500" v-if="isError">{{ error }}</span>
-                                        </div>
+                                        </FormField>
                                     </div>
                                     <DialogFooter>
                                         <Button type="submit" v-if="!isPending">Login</Button>
