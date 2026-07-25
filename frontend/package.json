@@ -12,7 +12,8 @@
     "coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "@lucide/vue": "^1.17.0",
+    "@internationalized/date": "^3.12.2",
+    "@lucide/vue": "^1.26.0",
     "@tailwindcss/vite": "^4.3.0",
     "@tanstack/vue-query": "^5.100.14",
     "@vee-validate/zod": "^4.15.1",
@@ -22,7 +23,7 @@
     "clsx": "^2.1.1",
     "lucide-vue-next": "^1.0.0",
     "pinia": "^3.0.4",
-    "reka-ui": "^2.9.8",
+    "reka-ui": "^2.10.1",
     "swiper": "^12.1.4",
     "tailwind-merge": "^3.6.0",
     "tailwindcss": "^4.3.0",

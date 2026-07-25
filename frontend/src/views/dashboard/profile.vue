@@ -23,7 +23,7 @@
     <div v-if="!authStore.user">
         <h1>Account not found</h1>
     </div>
-    <div class="h-full" v-else>
+    <div v-else>
         <div class="w-3/4 m-auto grid grid-cols-1 md:grid-cols-[1fr_4fr] gap-4">
             <aside class="bg-white dark:bg-zinc-950">
                 <ul class="list-none text-center">
