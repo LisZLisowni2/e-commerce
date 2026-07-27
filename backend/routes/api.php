@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AddressController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProductController;
 use Illuminate\Support\Facades\App;
@@ -30,6 +31,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/user/email', [AuthController::class, 'updateEmail']);
     Route::put('/user/password', [AuthController::class, 'updatePassword']);
     Route::put('/user/personal', [AuthController::class, 'updatePersonal']);
+
+    Route::apiResource('addresses', AddressController::class);
 
     Route::middleware('scope:admin,vendor,superadmin')->group(function () {
         Route::post('/products', [ProductController::class, 'store']);
