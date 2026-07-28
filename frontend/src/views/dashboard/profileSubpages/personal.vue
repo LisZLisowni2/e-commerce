@@ -79,15 +79,15 @@
     <section>
         <form @submit.prevent="onSubmit">
             <ProfileCard>
-                Firstname: <Input :default-value="authStore.user?.first_name" }} v-model="firstname" />
+                Firstname: <Input :default-value="authStore.user?.first_name" v-model="firstname" />
                 <p class="text-sm py-2 text-red-500" v-if="errors.firstname">{{ errors.firstname }}</p>
             </ProfileCard>
             <ProfileCard>
-                Lastname: <Input :default-value="authStore.user?.last_name" }} v-model="lastname" />
+                Lastname: <Input :default-value="authStore.user?.last_name" v-model="lastname" />
                 <p class="text-sm py-2 text-red-500" v-if="errors.lastname">{{ errors.lastname }}</p>
             </ProfileCard>
             <ProfileCard>
-                Phone: <Input :default-value="authStore.user?.phone" }} v-model="phone" />
+                Phone: <Input :default-value="authStore.user?.phone" v-model="phone" />
                 <p class="text-sm py-2 text-red-500" v-if="errors.phone">{{ errors.phone }}</p>
             </ProfileCard>
             <ProfileCard>

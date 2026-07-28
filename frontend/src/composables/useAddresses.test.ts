@@ -16,22 +16,22 @@ vi.mock("@/api", () => ({
 
 const mockAddresses: Address[] = [
     {
+        id: 1,
         address_type: "shipping",
-        is_default: true,
         address_line_1: "test",
         address_line_2: "",
         city: "Test",
-        country_code: "PL",
+        country: "Poland",
         postal_code: "00-000",
         state_province: "Test",
     },
     {
+        id: 2,
         address_type: "billing",
-        is_default: false,
         address_line_1: "test 2",
         address_line_2: "test 2",
         city: "Test 2",
-        country_code: "US",
+        country: "USA",
         postal_code: "00-000",
         state_province: "Test",
     },
@@ -99,8 +99,8 @@ describe("useAddresses", () => {
         const result = await queryFn!();
 
         expect(result.addresses).toHaveLength(2);
-        expect(result.addresses[0].shipping_type).toBe("shipping");
-        expect(result.addresses[1].shipping_type).toBe("billing");
+        expect(result.addresses[0].address_type).toBe("shipping");
+        expect(result.addresses[1].address_type).toBe("billing");
     });
 
     it("propagates API errors", async () => {

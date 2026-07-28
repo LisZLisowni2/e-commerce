@@ -16,7 +16,7 @@ test('authenticated user can list own addresses', function () {
     $response = $this->actingAs($user)->getJson('/api/addresses');
 
     $response->assertStatus(200);
-    expect(count($response->json('address')))->toBe(3);
+    expect(count($response->json('addresses')))->toBe(3);
 });
 
 test('user only sees own addresses', function () {
@@ -29,7 +29,7 @@ test('user only sees own addresses', function () {
     $response = $this->actingAs($user)->getJson('/api/addresses');
 
     $response->assertStatus(200);
-    expect(count($response->json('address')))->toBe(2);
+    expect(count($response->json('addresses')))->toBe(2);
 });
 
 test('unauthenticated user cannot view address', function () {
@@ -66,7 +66,7 @@ test('unauthenticated user cannot create address', function () {
         'address_line_1' => '123 Main St',
         'city' => 'New York',
         'postal_code' => '10001',
-        'country_code' => 'US',
+        'country' => 'USA',
     ]);
 
     $response->assertStatus(401);
@@ -82,7 +82,7 @@ test('authenticated user can create address', function () {
         'city' => 'New York',
         'state_province' => 'NY',
         'postal_code' => '10001',
-        'country_code' => 'US',
+        'country' => 'USA',
     ]);
 
     $response->assertStatus(201);
@@ -102,7 +102,7 @@ test('create address validation errors', function () {
         'address_line_1',
         'city',
         'postal_code',
-        'country_code',
+        'country',
     ]);
 });
 
@@ -114,26 +114,11 @@ test('create address invalid address_type', function () {
         'address_line_1' => '123 Main St',
         'city' => 'New York',
         'postal_code' => '10001',
-        'country_code' => 'US',
+        'country' => 'USA',
     ]);
 
     $response->assertStatus(422);
     $response->assertJsonValidationErrors(['address_type']);
-});
-
-test('create address invalid country_code length', function () {
-    $user = User::factory()->create();
-
-    $response = $this->actingAs($user)->postJson('/api/addresses', [
-        'address_type' => 'shipping',
-        'address_line_1' => '123 Main St',
-        'city' => 'New York',
-        'postal_code' => '10001',
-        'country_code' => 'USA',
-    ]);
-
-    $response->assertStatus(422);
-    $response->assertJsonValidationErrors(['country_code']);
 });
 
 test('unauthenticated user cannot update address', function () {
@@ -224,7 +209,7 @@ test('create billing address', function () {
         'address_line_1' => '456 Oak Ave',
         'city' => 'Chicago',
         'postal_code' => '60601',
-        'country_code' => 'US',
+        'country' => 'USA',
     ]);
 
     $response->assertStatus(201);
@@ -237,5 +222,5 @@ test('list addresses returns empty array for user with no addresses', function (
     $response = $this->actingAs($user)->getJson('/api/addresses');
 
     $response->assertStatus(200);
-    expect($response->json('address'))->toBe([]);
+    expect($response->json('addresses'))->toBe([]);
 });

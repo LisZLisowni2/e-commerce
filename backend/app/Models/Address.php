@@ -16,7 +16,7 @@ class Address extends Model
         "city",
         "state_province",
         "postal_code",
-        "country_code",
+        "country",
     ];
 
     protected function casts(): array {

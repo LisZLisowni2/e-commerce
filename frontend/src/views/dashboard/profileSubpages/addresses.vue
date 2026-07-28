@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref } from "vue";
 import Button from '@/components/ui/button/Button.vue';
 import {
     Dialog,
@@ -24,20 +25,22 @@ import { useQueryClient, useMutation } from "@tanstack/vue-query"
 import api from '@/api';
 import { useAuthStore } from '@/stores/useAuthStore';
 import { useAddresses } from '@/composables/useAddresses';
+import type { Address } from '@/types/Address';
+import DialogClose from "@/components/ui/dialog/DialogClose.vue";
 
 const addressSchema = z.object({
     address_type: z.string().min(1, { message: "Address type is required" }),
     address_line_1: z.string().min(1, { message: "Address line 1 is required" }),
     address_line_2: z.string().optional(),
     city: z.string().min(1, { message: "City is required" }),
-    state_province: z.string().min(1, { message: "State province is required" }),
+    state_province: z.string().optional(),
     postal_code: z.string().min(1, { message: "Postal code is required" }),
-    country_code: z.string().min(1, { message: "Country code is required" }),
+    country: z.string().min(1, { message: "Country is required" }),
 })
 
 type addressSchemaType = z.infer<typeof addressSchema>
 
-const { handleSubmit, defineField, errors } = useForm<addressSchemaType>({
+const { handleSubmit, defineField, errors, resetForm } = useForm<addressSchemaType>({
     validationSchema: toTypedSchema(addressSchema)
 })
 
@@ -47,20 +50,30 @@ const [addressLine2, addressLine2Attrs] = defineField("address_line_2")
 const [city, cityAttrs] = defineField("city")
 const [stateProvince, stateProvinceAttrs] = defineField("state_province")
 const [postalCode, postalCodeAttrs] = defineField("postal_code")
-const [countryCode, countryCodeAttrs] = defineField("country_code")
+const [countryCode, countryCodeAttrs] = defineField("country")
 
 const queryClient = useQueryClient()
 
+const dialogOpen = ref(false)
+const formMode = ref<"add" | "edit">("add")
+const editingAddress = ref<Address | null>(null)
+
 const { mutate } = useMutation({
     mutationFn: async (credentials: addressSchemaType & {
-        user_id: number
+        user_id?: number
+        id?: number
     }) => {
-        const { data } = await api.post("/addresses", credentials)
+        if (formMode.value === "edit" && credentials.id) {
+            const { data } = await api.put(`/addresses/${credentials.id}`, credentials)
+            return data
+        }
 
+        const { data } = await api.post("/addresses", credentials)
         return data
     },
     onSuccess: () => {
         queryClient.invalidateQueries()
+        closeDialog()
     }
 })
 
@@ -72,20 +85,61 @@ const onSubmit = handleSubmit((values) => {
         return;
     }
 
-    mutate({ ...values, user_id: authStore.user.id })
+    if (formMode.value === "edit" && editingAddress.value) {
+        mutate({ ...values, id: editingAddress.value.id })
+    } else {
+        mutate({ ...values, user_id: authStore.user.id })
+    }
 })
+
+function openEditDialog(address: Address) {
+    formMode.value = "edit"
+    editingAddress.value = address
+    resetForm({
+        values: {
+            address_type: address.address_type,
+            address_line_1: address.address_line_1,
+            address_line_2: address.address_line_2 ?? "",
+            city: address.city,
+            state_province: address.state_province,
+            postal_code: address.postal_code,
+            country: address.country,
+        }
+    })
+    dialogOpen.value = true
+}
+
+function closeDialog() {
+    dialogOpen.value = false
+    formMode.value = "add"
+    editingAddress.value = null
+    resetForm()
+}
+
+const { mutate: deleteMutation } = useMutation({
+    mutationFn: async (id: number) => {
+        await api.delete(`/addresses/${id}`)
+    },
+    onSuccess: () => {
+        queryClient.invalidateQueries()
+    }
+})
+
+const onDeleteAddress = async (id: number) => {
+    deleteMutation(id)
+}
 
 </script>
 
 <template>
     <section>
-        <div class="text-center">
-            <Dialog>
+        <div class="max-md:text-center">
+            <Dialog v-model:open="dialogOpen">
                 <DialogTrigger as-child>
                     <Button class="m-8">Add a new address</Button>
                 </DialogTrigger>
                 <DialogContent>
-                    <DialogHeader>Address details</DialogHeader>
+                    <DialogHeader>{{ formMode === "add" ? "Add address" : "Edit address" }}</DialogHeader>
                     <form class="grid gap-3" @submit.prevent="onSubmit">
                         <FormField>
                             <Label for="address_type">Address Type</Label>
@@ -171,37 +225,57 @@ const onSubmit = handleSubmit((values) => {
                             </span>
                         </FormField>
                         <FormField>
-                            <Label for="country_code">Country Code</Label>
+                            <Label for="country">Country</Label>
                             <Input
                                 v-model="countryCode"
                                 v-bind="countryCodeAttrs"
-                                id="country_code"
+                                id="country"
                                 type="text"
                             />
-                            <span class="text-red-500" v-if="errors.country_code">
-                                {{ errors.country_code }}
+                            <span class="text-red-500" v-if="errors.country">
+                                {{ errors.country }}
                             </span>
                         </FormField>
                         <DialogFooter>
-                            <Button type="submit">Add</Button>
+                            <Button type="submit">{{ formMode === "add" ? "Add" : "Save" }}</Button>
                         </DialogFooter>
                     </form>
                 </DialogContent>
             </Dialog>
         </div>
-        <div>
+        <div class="flex flex-wrap max-md:justify-center">
             <p v-if="isLoading">Loading...</p>
             <p v-else-if="isError">{{ error }}</p>
-            <div v-else v-for="address in data?.addresses" class="border-2 m-2 p-3 rounded-2xl hover:scale-105 transition-all">
+            <div v-else v-for="address in data?.addresses" class="border-2 m-2 p-3 rounded-2xl hover:scale-105 transition-all w-fit" :key="address.id">
                 <p><b>Shipping type: </b>{{ address.address_type }}</p>
                 <p><b>Address line 1: </b>{{ address.address_line_1 }}</p>
                 <p><b>Address line 2: </b>{{ address.address_line_2 }}</p>
                 <p><b>City: </b>{{ address.city }}</p>
-                <p><b>Country code: </b>{{ address.country_code }}</p>
+                <p><b>Country: </b>{{ address.country }}</p>
                 <p><b>State province: </b>{{ address.state_province }}</p>
                 <p><b>Postal code: </b>{{ address.postal_code }}</p>
-                <p><b>Is default? </b>{{ address.is_default }}</p>
-                <p class="*:m-2"><Button v-if="!address.is_default">Make default</Button><Button>Edit</Button><Button>Delete</Button></p>
+                <p class="*:m-2">
+                    <Button @click="openEditDialog(address)">Edit</Button>
+                    <Dialog>
+                        <DialogTrigger as-child>
+                            <Button>Delete</Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                Deletion of "{{ address.address_line_1 }}" address
+                            </DialogHeader>
+                            Are you sure you want to delete that address?
+                            <DialogFooter>
+                                <DialogClose>
+                                    <div class="*:mx-2">
+                                        <Button @click.prevent="onDeleteAddress(address.id)">Yes</Button>
+                                        <Button variant="ghost">No</Button>
+                                    </div>
+                                </DialogClose>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+                </p>
             </div>
         </div>
     </section>

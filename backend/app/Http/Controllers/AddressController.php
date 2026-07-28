@@ -22,7 +22,7 @@ class AddressController extends Controller
     {
         $this->authorize('view', $address);
 
-        return response()->json(["addresses" => $address]);
+        return response()->json(["address" => $address]);
     }
 
     public function store(Request $request): JsonResponse
@@ -36,7 +36,7 @@ class AddressController extends Controller
             "city" => "required|string|max:255",
             "state_province" => "nullable|string|max:255",
             "postal_code" => "required|string|max:20",
-            "country_code" => "required|string|size:2",
+            "country" => "required|string",
         ]);
 
         $address = $request->user()->addresses()->create($data);
@@ -55,7 +55,7 @@ class AddressController extends Controller
             "city" => "sometimes|string|max:255",
             "state_province" => "nullable|string|max:255",
             "postal_code" => "sometimes|string|max:20",
-            "country_code" => "sometimes|string|size:2",
+            "country" => "sometimes|string",
         ]);
 
         $address->update($data);
