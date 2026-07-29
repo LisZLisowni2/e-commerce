@@ -16,7 +16,6 @@ Artisan::command('make:root', function () {
     $this->info('   Creating Super-Admin Account     ');
     $this->info('====================================');
 
-    $name = $this->ask('Enter Admin Name', 'root');
     $email = $this->ask('Enter Admin Email');
     
     if (User::where('email', $email)->exists()) {
@@ -36,7 +35,6 @@ Artisan::command('make:root', function () {
     }
 
     $admin = User::create([
-        'name' => $name,
         'email' => $email,
         'password' => Hash::make($password),
         'scope' => ScopeEnum::SUPERADMIN,

@@ -1,0 +1,15 @@
+export interface User {
+    id: number,
+    email: string,
+    email_verified_at?: string,
+    password: string,
+    scope: string,
+    status: string,
+    first_name?: string,
+    last_name?: string,
+    phone?: string,
+    date_of_birth?: Date,
+    created_at?: string,
+    updated_at?: string,
+    gender?: string,
+}

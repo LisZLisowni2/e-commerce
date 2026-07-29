@@ -13,6 +13,7 @@ class Product extends Model
 
     public const CREATED_AT = 'created_at';
     public const UPDATED_AT = 'updated_at';
+    
     protected $fillable = [
         'name',
         'description',

@@ -7,8 +7,7 @@ namespace App\Models;
 use App\AddressType;
 use App\ScopeEnum;
 use Database\Factories\UserFactory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -79,5 +78,17 @@ class User extends Authenticatable
             ->where('address_type', AddressType::SHIPPING)
             ->where('is_default', true)
             ->limit(1);
+    }
+
+    /* 
+        Get the user's products
+    */
+    public function products(): HasMany
+    {
+        return $this->hasMany(Product::class);
+    }
+
+    public function hasScope(ScopeEnum ...$scopes) {
+        return in_array($this->scope, $scopes, true);
     }
 }

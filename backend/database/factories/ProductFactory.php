@@ -3,6 +3,8 @@
 namespace Database\Factories;
 
 use App\Models\User;
+use App\ScopeEnum;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -25,6 +27,9 @@ class ProductFactory extends Factory
             'price' => fake()->randomFloat(2, 10, 1000),
             'imageURL' => fake()->imageUrl(),
             'last30DaysPrice' => fake()->randomFloat(2, 10, 1000),
+            'vendor_id' => User::factory([
+                'scope' => ScopeEnum::VENDOR->value,
+            ])
         ];
     }
 }
