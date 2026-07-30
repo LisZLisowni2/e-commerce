@@ -27,6 +27,7 @@ class ProductFactory extends Factory
             'price' => fake()->randomFloat(2, 10, 1000),
             'imageURL' => fake()->imageUrl(),
             'last30DaysPrice' => fake()->randomFloat(2, 10, 1000),
+            'quantity' => fake()->numberBetween(10, 200),
             'vendor_id' => User::factory([
                 'scope' => ScopeEnum::VENDOR->value,
             ])
