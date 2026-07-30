@@ -40,7 +40,20 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user)
     {
+        $validated = $request->validate([
+            'email' => 'sometimes|email|unique:users,email,' . $user->id,
+            'scope' => 'sometimes|string|in:user,admin,vendor,support,superadmin',
+            'status' => 'sometimes|string|in:active,banned,inactive',
+            'first_name' => 'nullable|string|max:255',
+            'last_name' => 'nullable|string|max:255',
+            'phone' => 'nullable|string|max:30',
+            'date_of_birth' => 'nullable|date',
+            'gender' => 'nullable|string|max:20',
+        ]);
 
+        $user->update($validated);
+
+        return response()->json(["user" => $user]);
     }
 
     /**

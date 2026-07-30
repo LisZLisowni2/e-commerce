@@ -35,7 +35,7 @@ const routes: RouteRecordRaw[] = [
             },
             {
                 path: "products",
-                component: () => import("@/views/dashboard/adminDashboard.vue")
+                component: () => import("@/views/dashboard/adminSubpages/products.vue")
             },
             {
                 path: "notifications",

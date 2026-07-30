@@ -51,7 +51,7 @@ const footerItems = [
 </script>
 
 <template>
-    <Sidebar variant="sidebar">
+    <Sidebar variant="sidebar" class="z-20">
         <SidebarContent>
             <SidebarGroup>
                 <SidebarGroupLabel>Admin dashboard</SidebarGroupLabel>
