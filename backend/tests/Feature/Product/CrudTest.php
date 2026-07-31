@@ -75,6 +75,7 @@ test('admin can create product', function () {
         'price' => 29.99,
         'imageURL' => 'https://example.com/image.jpg',
         'last30DaysPrice' => 34.99,
+        'quantity' => 10,
     ]);
 
     $response->assertStatus(201);
@@ -121,6 +122,7 @@ test('vendor can create product', function () {
         'price' => 49.99,
         'imageURL' => 'https://example.com/vendor.jpg',
         'last30DaysPrice' => 54.99,
+        'quantity' => 10,
     ]);
 
     $response->assertStatus(201);
@@ -166,6 +168,7 @@ test('superadmin can create product', function () {
         'price' => 99.99,
         'imageURL' => 'https://example.com/superadmin.jpg',
         'last30DaysPrice' => 109.99,
+        'quantity' => 10,
     ]);
 
     $response->assertStatus(201);
