@@ -29,7 +29,9 @@ RUN apk add --no-cache \
     curl && \ 
     pecl install redis && \
     docker-php-ext-enable redis && \
-    docker-php-ext-install pdo pdo_pgsql mbstring zip exif pcntl gd
+    docker-php-ext-install pdo pdo_pgsql mbstring zip exif pcntl gd && \
+    echo "upload_max_filesize=4M" > "$PHP_INI_DIR/conf.d/uploads.ini" && \
+    echo "post_max_size=8M" >> "$PHP_INI_DIR/conf.d/uploads.ini"
 
 COPY --from=build /app .
 
