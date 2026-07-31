@@ -20,6 +20,8 @@ class Product extends Model
         'price',
         'imageURL',
         'last30DaysPrice',
+        'quantity',
+        'vendor_id'
     ];
 
     protected $casts = [
