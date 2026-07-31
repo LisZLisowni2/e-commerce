@@ -11,7 +11,7 @@ import {
 import { useProducts } from "@/composables/useProducts";
 import { useUsers } from "@/composables/useUsers";
 import type { User } from "@/types/User";
-import { Eraser, Pencil, Plus, Search, UserPlus } from "@lucide/vue";
+import { Eraser, Pencil, Plus, Search } from "@lucide/vue";
 import {
     Dialog,
     DialogContent,
@@ -32,6 +32,7 @@ import api from "@/api";
 import { computed, ref } from "vue";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const productSchema = z.object({
     name: z.string().optional(),
