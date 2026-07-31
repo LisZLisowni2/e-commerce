@@ -61,7 +61,6 @@ const [status, statusAttrs] = defineField('status')
 const [firstname, firstnameAttrs] = defineField('first_name')
 const [lastname, lastnameAttrs] = defineField('last_name')
 const [phone, phoneAttrs] = defineField('phone')
-// const [dateOfBirth, dateOfBirthAttrs] = defineField('date_of_birth')
 const [gender, genderAttrs] = defineField('gender')
 
 const { value: dateOfBirth } = useField<DateValue>('date_of_birth')
@@ -95,6 +94,8 @@ const selectedUser = ref<number>(-1)
 
 const onSubmit = handleSubmit((values) => {
     if (selectedUser.value < 0) return;
+
+    if (authStore.user?.scope !== "SUPERADMIN" && values.scope === "SUPERADMIN") return;
 
     updateMutation({
         ...values,
@@ -290,22 +291,6 @@ const filteredData = computed(() => {
                                                 v-if="errors.phone"
                                             >
                                                 {{ errors.phone }}
-                                            </span>
-                                        </FormField>
-                                        <FormField>
-                                            <Label for="lastname">Lastname</Label>
-                                            <Input
-                                                id="lastname"
-                                                type="text"
-                                                v-model="lastname"
-                                                v-bind="lastnameAttrs"
-                                                :default-value="user.last_name"
-                                            />
-                                            <span
-                                                class="text-red-500"
-                                                v-if="errors.last_name"
-                                            >
-                                                {{ errors.last_name }}
                                             </span>
                                         </FormField>
                                         <FormField>
