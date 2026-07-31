@@ -3,6 +3,8 @@
 use App\Models\Product;
 use App\Models\User;
 use App\ScopeEnum;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
 test('unauthenticated user can list products', function () {
     Product::factory(3)->create();
@@ -40,14 +42,14 @@ test('user role cannot create product', function () {
         'scope' => ScopeEnum::USER,
     ]);
 
-    $response = $this->actingAs($user)->postJson('/api/products', [
+    $response = $this->actingAs($user)->post('/api/products', [
         'name' => 'Test Product',
         'description' => 'Test Description',
         'price' => 29.99,
-        'imageURL' => 'https://example.com/image.jpg',
+        'image' => UploadedFile::fake()->image('image.png'),
         'last30DaysPrice' => 34.99,
         'quantity' => 10,
-    ]);
+    ], ['Accept' => 'application/json']);
 
     $response->assertStatus(403);
 });
@@ -79,6 +81,8 @@ test('user role cannot delete product', function () {
 });
 
 test('admin can create product with a vendor', function () {
+    Storage::fake('local');
+
     $admin = User::factory()->create([
         'scope' => ScopeEnum::ADMIN,
     ]);
@@ -87,23 +91,26 @@ test('admin can create product with a vendor', function () {
         'scope' => ScopeEnum::VENDOR,
     ]);
 
-    $response = $this->actingAs($admin)->postJson('/api/products', [
+    $response = $this->actingAs($admin)->post('/api/products', [
         'name' => 'Test Product',
         'description' => 'Test Description',
         'price' => 29.99,
-        'imageURL' => 'https://example.com/image.jpg',
+        'image' => UploadedFile::fake()->image('image.png'),
         'last30DaysPrice' => 34.99,
         'quantity' => 10,
         'vendor_id' => $vendor->id,
-    ]);
+    ], ['Accept' => 'application/json']);
 
     $response->assertStatus(201);
     expect($response->json('name'))->toBe('Test Product');
     expect($response->json('vendor_id'))->toBe($vendor->id);
+    expect($response->json('imageURL'))->toBeString();
     expect(Product::count())->toBe(1);
 });
 
 test('admin can create product without last30DaysPrice', function () {
+    Storage::fake('local');
+
     $admin = User::factory()->create([
         'scope' => ScopeEnum::ADMIN,
     ]);
@@ -112,14 +119,14 @@ test('admin can create product without last30DaysPrice', function () {
         'scope' => ScopeEnum::VENDOR,
     ]);
 
-    $response = $this->actingAs($admin)->postJson('/api/products', [
+    $response = $this->actingAs($admin)->post('/api/products', [
         'name' => 'Test Product',
         'description' => 'Test Description',
         'price' => 29.99,
-        'imageURL' => 'https://example.com/image.jpg',
+        'image' => UploadedFile::fake()->image('image.png'),
         'quantity' => 10,
         'vendor_id' => $vendor->id,
-    ]);
+    ], ['Accept' => 'application/json']);
 
     $response->assertStatus(201);
     expect($response->json('last30DaysPrice'))->toBeNull();
@@ -130,13 +137,13 @@ test('admin must provide a vendor id when creating a product', function () {
         'scope' => ScopeEnum::ADMIN,
     ]);
 
-    $response = $this->actingAs($admin)->postJson('/api/products', [
+    $response = $this->actingAs($admin)->post('/api/products', [
         'name' => 'Test Product',
         'description' => 'Test Description',
         'price' => 29.99,
-        'imageURL' => 'https://example.com/image.jpg',
+        'image' => UploadedFile::fake()->image('image.png'),
         'quantity' => 10,
-    ]);
+    ], ['Accept' => 'application/json']);
 
     $response->assertStatus(422);
     $response->assertJsonValidationErrors(['vendor_id']);
@@ -151,14 +158,14 @@ test('admin cannot assign a product to a non-vendor user', function () {
         'scope' => ScopeEnum::USER,
     ]);
 
-    $response = $this->actingAs($admin)->postJson('/api/products', [
+    $response = $this->actingAs($admin)->post('/api/products', [
         'name' => 'Test Product',
         'description' => 'Test Description',
         'price' => 29.99,
-        'imageURL' => 'https://example.com/image.jpg',
+        'image' => UploadedFile::fake()->image('image.png'),
         'quantity' => 10,
         'vendor_id' => $regularUser->id,
-    ]);
+    ], ['Accept' => 'application/json']);
 
     $response->assertStatus(422);
     $response->assertJsonValidationErrors(['vendor_id']);
@@ -211,22 +218,25 @@ test('admin can delete product', function () {
 });
 
 test('vendor can create product', function () {
+    Storage::fake('local');
+
     $vendor = User::factory()->create([
         'scope' => ScopeEnum::VENDOR,
     ]);
 
-    $response = $this->actingAs($vendor)->postJson('/api/products', [
+    $response = $this->actingAs($vendor)->post('/api/products', [
         'name' => 'Vendor Product',
         'description' => 'Vendor Description',
         'price' => 49.99,
-        'imageURL' => 'https://example.com/vendor.jpg',
+        'image' => UploadedFile::fake()->image('vendor.png'),
         'last30DaysPrice' => 54.99,
         'quantity' => 10,
-    ]);
+    ], ['Accept' => 'application/json']);
 
     $response->assertStatus(201);
     expect($response->json('name'))->toBe('Vendor Product');
     expect($response->json('vendor_id'))->toBe($vendor->id);
+    expect($response->json('imageURL'))->toBeString();
 });
 
 test('vendor cannot specify a vendor id when creating a product', function () {
@@ -238,14 +248,14 @@ test('vendor cannot specify a vendor id when creating a product', function () {
         'scope' => ScopeEnum::VENDOR,
     ]);
 
-    $response = $this->actingAs($vendor)->postJson('/api/products', [
+    $response = $this->actingAs($vendor)->post('/api/products', [
         'name' => 'Vendor Product',
         'description' => 'Vendor Description',
         'price' => 49.99,
-        'imageURL' => 'https://example.com/vendor.jpg',
+        'image' => UploadedFile::fake()->image('vendor.png'),
         'quantity' => 10,
         'vendor_id' => $otherVendor->id,
-    ]);
+    ], ['Accept' => 'application/json']);
 
     $response->assertStatus(422);
     $response->assertJsonValidationErrors(['vendor_id']);
@@ -314,6 +324,8 @@ test('vendor can delete own product', function () {
 });
 
 test('superadmin can create product', function () {
+    Storage::fake('local');
+
     $superadmin = User::factory()->create([
         'scope' => ScopeEnum::SUPERADMIN,
     ]);
@@ -322,18 +334,19 @@ test('superadmin can create product', function () {
         'scope' => ScopeEnum::VENDOR,
     ]);
 
-    $response = $this->actingAs($superadmin)->postJson('/api/products', [
+    $response = $this->actingAs($superadmin)->post('/api/products', [
         'name' => 'Superadmin Product',
         'description' => 'Superadmin Description',
         'price' => 99.99,
-        'imageURL' => 'https://example.com/superadmin.jpg',
+        'image' => UploadedFile::fake()->image('superadmin.png'),
         'last30DaysPrice' => 109.99,
         'quantity' => 10,
         'vendor_id' => $vendor->id,
-    ]);
+    ], ['Accept' => 'application/json']);
 
     $response->assertStatus(201);
     expect($response->json('name'))->toBe('Superadmin Product');
+    expect($response->json('imageURL'))->toBeString();
 });
 
 test('superadmin can update product', function () {
@@ -369,14 +382,14 @@ test('support role cannot create product', function () {
         'scope' => ScopeEnum::SUPPORT,
     ]);
 
-    $response = $this->actingAs($support)->postJson('/api/products', [
+    $response = $this->actingAs($support)->post('/api/products', [
         'name' => 'Support Product',
         'description' => 'Support Description',
         'price' => 19.99,
-        'imageURL' => 'https://example.com/support.jpg',
+        'image' => UploadedFile::fake()->image('support.png'),
         'last30DaysPrice' => 24.99,
         'quantity' => 10,
-    ]);
+    ], ['Accept' => 'application/json']);
 
     $response->assertStatus(403);
 });
@@ -386,12 +399,12 @@ test('create product requires quantity', function () {
         'scope' => ScopeEnum::VENDOR,
     ]);
 
-    $response = $this->actingAs($vendor)->postJson('/api/products', [
+    $response = $this->actingAs($vendor)->post('/api/products', [
         'name' => 'Test Product',
         'description' => 'Test Description',
         'price' => 29.99,
-        'imageURL' => 'https://example.com/image.jpg',
-    ]);
+        'image' => UploadedFile::fake()->image('image.png'),
+    ], ['Accept' => 'application/json']);
 
     $response->assertStatus(422);
     $response->assertJsonValidationErrors(['quantity']);
@@ -402,13 +415,13 @@ test('create product rejects negative quantity', function () {
         'scope' => ScopeEnum::VENDOR,
     ]);
 
-    $response = $this->actingAs($vendor)->postJson('/api/products', [
+    $response = $this->actingAs($vendor)->post('/api/products', [
         'name' => 'Test Product',
         'description' => 'Test Description',
         'price' => 29.99,
-        'imageURL' => 'https://example.com/image.jpg',
+        'image' => UploadedFile::fake()->image('image.png'),
         'quantity' => -1,
-    ]);
+    ], ['Accept' => 'application/json']);
 
     $response->assertStatus(422);
     $response->assertJsonValidationErrors(['quantity']);
@@ -419,10 +432,10 @@ test('create product validation errors', function () {
         'scope' => ScopeEnum::ADMIN,
     ]);
 
-    $response = $this->actingAs($admin)->postJson('/api/products', []);
+    $response = $this->actingAs($admin)->post('/api/products', [], ['Accept' => 'application/json']);
 
     $response->assertStatus(422);
-    $response->assertJsonValidationErrors(['name', 'description', 'price', 'imageURL', 'quantity', 'vendor_id']);
+    $response->assertJsonValidationErrors(['name', 'description', 'price', 'image', 'quantity', 'vendor_id']);
 });
 
 test('update product validation errors', function () {
@@ -438,4 +451,39 @@ test('update product validation errors', function () {
 
     $response->assertStatus(422);
     $response->assertJsonValidationErrors(['price']);
+});
+
+test('create product rejects a non-image file', function () {
+    $vendor = User::factory()->create([
+        'scope' => ScopeEnum::VENDOR,
+    ]);
+
+    $response = $this->actingAs($vendor)->post('/api/products', [
+        'name' => 'Test Product',
+        'description' => 'Test Description',
+        'price' => 29.99,
+        'image' => UploadedFile::fake()->create('document.txt', 100),
+        'quantity' => 10,
+    ], ['Accept' => 'application/json']);
+
+    $response->assertStatus(422);
+    $response->assertJsonValidationErrors(['image']);
+});
+
+test('admin can update product image', function () {
+    Storage::fake('local');
+
+    $admin = User::factory()->create([
+        'scope' => ScopeEnum::ADMIN,
+    ]);
+
+    $product = Product::factory()->create();
+
+    $response = $this->actingAs($admin)->post("/api/products/{$product->id}", [
+        '_method' => 'PUT',
+        'image' => UploadedFile::fake()->image('new-image.png'),
+    ], ['Accept' => 'application/json']);
+
+    $response->assertStatus(200);
+    expect($response->json('imageURL'))->toBeString();
 });

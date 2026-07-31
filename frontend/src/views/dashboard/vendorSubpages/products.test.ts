@@ -73,6 +73,10 @@ const mountProducts = (data: Product[] | undefined = undefined, isLoading = fals
 
 const flush = () => new Promise((resolve) => setTimeout(resolve, 30));
 
+const createImageFile = (size = 1024, name = "new-gpu.jpg", type = "image/jpeg") => {
+    return new File([new ArrayBuffer(size)], name, { type });
+};
+
 const openDialog = async (wrapper: ReturnType<typeof mountProducts>, buttonIndex: number) => {
     wrapper.findAll("button")[buttonIndex].trigger("click");
     await flush();
@@ -220,7 +224,7 @@ describe("vendor products.vue", () => {
         (wrapper.vm as any).addDescription = "A new graphics card";
         (wrapper.vm as any).addPrice = "499.99";
         (wrapper.vm as any).addQuantity = "10";
-        (wrapper.vm as any).addImageURL = "/new-gpu.jpg";
+        (wrapper.vm as any).addImage = createImageFile();
         submitDialogForm();
         await flush();
 
@@ -231,7 +235,7 @@ describe("vendor products.vue", () => {
                 description: "A new graphics card",
                 price: 499.99,
                 quantity: 10,
-                imageURL: "/new-gpu.jpg",
+                image: expect.any(File),
             }),
         );
         expect(mockMutate).toHaveBeenCalledWith(
@@ -248,7 +252,7 @@ describe("vendor products.vue", () => {
 
         expect(mockMutate).not.toHaveBeenCalled();
         expect(content!.textContent).toContain("Name is required");
-        expect(content!.textContent).toContain("Image URL is required");
+        expect(content!.textContent).toContain("Max image size if 5MB");
     });
 
     it("does not submit when the add quantity is negative", async () => {
@@ -258,12 +262,44 @@ describe("vendor products.vue", () => {
         (wrapper.vm as any).addName = "New GPU";
         (wrapper.vm as any).addDescription = "A new graphics card";
         (wrapper.vm as any).addPrice = "499.99";
-        (wrapper.vm as any).addImageURL = "/new-gpu.jpg";
+        (wrapper.vm as any).addImage = createImageFile();
         setDialogInput("add-quantity", "-1");
         submitDialogForm();
         await flush();
 
         expect(mockMutate).not.toHaveBeenCalled();
         expect(content!.textContent).toContain("Number must be greater than 0");
+    });
+
+    it("does not submit when the image file is too large", async () => {
+        const wrapper = mountProducts(mockProducts);
+        const content = await openDialog(wrapper, 0);
+
+        (wrapper.vm as any).addName = "New GPU";
+        (wrapper.vm as any).addDescription = "A new graphics card";
+        (wrapper.vm as any).addPrice = "499.99";
+        (wrapper.vm as any).addQuantity = "10";
+        (wrapper.vm as any).addImage = createImageFile(5 * 1024 * 1024 + 1);
+        submitDialogForm();
+        await flush();
+
+        expect(mockMutate).not.toHaveBeenCalled();
+        expect(content!.textContent).toContain("Max image size if 5MB");
+    });
+
+    it("does not submit when the image type is not supported", async () => {
+        const wrapper = mountProducts(mockProducts);
+        const content = await openDialog(wrapper, 0);
+
+        (wrapper.vm as any).addName = "New GPU";
+        (wrapper.vm as any).addDescription = "A new graphics card";
+        (wrapper.vm as any).addPrice = "499.99";
+        (wrapper.vm as any).addQuantity = "10";
+        (wrapper.vm as any).addImage = createImageFile(1024, "new-gpu.gif", "image/gif");
+        submitDialogForm();
+        await flush();
+
+        expect(mockMutate).not.toHaveBeenCalled();
+        expect(content!.textContent).toContain("Only .jpg, .jpeg, .png and .webp formats are supported.");
     });
 });

@@ -297,9 +297,9 @@ function handleFileChanges(event) {
                             />
                             <span
                                 class="text-red-500"
-                                v-if="addErrors.imageURL"
+                                v-if="addErrors.image"
                             >
-                                {{ addErrors.imageURL }}
+                                {{ addErrors.image }}
                             </span>
                         </FormField>
                         <FormField>
@@ -461,9 +461,9 @@ function handleFileChanges(event) {
                                             />
                                             <span
                                                 class="text-red-500"
-                                                v-if="errors.imageURL"
+                                                v-if="errors.image"
                                             >
-                                                {{ errors.imageURL }}
+                                                {{ errors.image }}
                                             </span>
                                         </FormField>
                                         <FormField>
