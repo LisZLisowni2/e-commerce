@@ -136,7 +136,7 @@ const filteredData = computed(() => {
                         <TableCell>{{ product.id }}</TableCell>
                         <TableCell>{{ product.vendor_id }}</TableCell>
                         <TableCell>{{ product.name }}</TableCell>
-                        <TableCell>{{ product.description }}</TableCell>
+                        <TableCell>{{ product.description.substring(0, 100) }}</TableCell>
                         <TableCell>{{ product.price }}</TableCell>
                         <TableCell>{{ product.quantity }}</TableCell>
                         <TableCell>{{ product.imageURL }}</TableCell>
