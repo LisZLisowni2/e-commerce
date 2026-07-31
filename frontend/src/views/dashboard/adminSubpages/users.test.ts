@@ -20,6 +20,7 @@ vi.mock("@tanstack/vue-query", () => ({
 
 vi.mock("@/api", () => ({
     default: {
+        post: vi.fn(),
         put: vi.fn(),
         delete: vi.fn(),
     },
@@ -178,28 +179,28 @@ describe("users.vue", () => {
         expect(wrapper.text()).not.toContain("alice@example.com");
     });
 
-    it("renders an edit and delete button for each user", () => {
+    it("renders an edit, delete, and add button", () => {
         const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockUsers });
-        expect(wrapper.findAll("button").length).toBe(4);
+        expect(wrapper.findAll("button").length).toBe(5);
     });
 
     it("opens the edit dialog with the correct user id", async () => {
         const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockUsers });
-        const content = await openDialog(wrapper, 0);
+        const content = await openDialog(wrapper, 1);
         expect(content).toBeTruthy();
         expect(content!.textContent).toContain("Edit User of ID 1");
     });
 
     it("prefills the form with the user email", async () => {
         const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockUsers });
-        await openDialog(wrapper, 0);
+        await openDialog(wrapper, 1);
         const emailInput = document.body.querySelector<HTMLInputElement>("#email");
         expect(emailInput!.value).toBe("alice@example.com");
     });
 
     it("submits the edit form with updated values", async () => {
         const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockUsers });
-        await openDialog(wrapper, 0);
+        await openDialog(wrapper, 1);
 
         (wrapper.vm as any).email = "new@example.com";
         (wrapper.vm as any).scope = "user";
@@ -215,7 +216,7 @@ describe("users.vue", () => {
 
     it("does not submit when the email is invalid", async () => {
         const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockUsers });
-        const content = await openDialog(wrapper, 0);
+        const content = await openDialog(wrapper, 1);
 
         setDialogInput("email", "not-an-email");
         (wrapper.vm as any).scope = "user";
@@ -229,7 +230,7 @@ describe("users.vue", () => {
 
     it("does not submit when the phone number is invalid", async () => {
         const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockUsers });
-        const content = await openDialog(wrapper, 0);
+        const content = await openDialog(wrapper, 1);
 
         (wrapper.vm as any).email = "new@example.com";
         (wrapper.vm as any).scope = "user";
@@ -244,7 +245,7 @@ describe("users.vue", () => {
 
     it("blocks non-superadmins from assigning the SUPERADMIN scope", async () => {
         const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockUsers });
-        await openDialog(wrapper, 0);
+        await openDialog(wrapper, 1);
 
         (wrapper.vm as any).email = "new@example.com";
         (wrapper.vm as any).status = "active";
@@ -257,7 +258,7 @@ describe("users.vue", () => {
 
     it("allows superadmins to assign the SUPERADMIN scope", async () => {
         const wrapper = mountUsers({ id: 1, scope: "SUPERADMIN" }, { users: mockUsers });
-        await openDialog(wrapper, 0);
+        await openDialog(wrapper, 1);
 
         (wrapper.vm as any).email = "new@example.com";
         (wrapper.vm as any).status = "active";
@@ -273,13 +274,13 @@ describe("users.vue", () => {
 
     it("opens the delete dialog with the correct user id", async () => {
         const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockUsers });
-        const content = await openDialog(wrapper, 1);
+        const content = await openDialog(wrapper, 2);
         expect(content!.textContent).toContain("Deletion of user of ID 1");
     });
 
     it("does not allow deleting your own account", async () => {
         const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockUsers });
-        await openDialog(wrapper, 1);
+        await openDialog(wrapper, 2);
         clickDialogButton("Yes");
         await flush();
 
@@ -288,11 +289,117 @@ describe("users.vue", () => {
 
     it("allows deleting another user", async () => {
         const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockUsers });
-        await openDialog(wrapper, 3);
+        await openDialog(wrapper, 4);
         clickDialogButton("Yes");
         await flush();
 
         expect(mockMutate).toHaveBeenCalledTimes(1);
         expect(mockMutate).toHaveBeenCalledWith(2);
+    });
+
+    it("opens the add user dialog", async () => {
+        const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockUsers });
+        const content = await openDialog(wrapper, 0);
+        expect(content).toBeTruthy();
+        expect(content!.textContent).toContain("Add User");
+    });
+
+    it("submits the add form with valid values", async () => {
+        const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockUsers });
+        await openDialog(wrapper, 0);
+
+        (wrapper.vm as any).addEmail = "new@example.com";
+        (wrapper.vm as any).addPassword = "password123";
+        (wrapper.vm as any).addScope = "vendor";
+        (wrapper.vm as any).addStatus = "active";
+        submitDialogForm();
+        await flush();
+
+        expect(mockMutate).toHaveBeenCalledTimes(1);
+        expect(mockMutate).toHaveBeenCalledWith(
+            expect.objectContaining({
+                email: "new@example.com",
+                password: "password123",
+                scope: "vendor",
+                status: "active",
+            }),
+        );
+    });
+
+    it("does not submit when the add email is invalid", async () => {
+        const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockUsers });
+        const content = await openDialog(wrapper, 0);
+
+        setDialogInput("add-email", "not-an-email");
+        (wrapper.vm as any).addPassword = "password123";
+        (wrapper.vm as any).addScope = "user";
+        (wrapper.vm as any).addStatus = "active";
+        submitDialogForm();
+        await flush();
+
+        expect(mockMutate).not.toHaveBeenCalled();
+        expect(content!.textContent).toContain("Invalid email");
+    });
+
+    it("does not submit when the password is too short", async () => {
+        const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockUsers });
+        const content = await openDialog(wrapper, 0);
+
+        (wrapper.vm as any).addEmail = "new@example.com";
+        (wrapper.vm as any).addPassword = "short";
+        (wrapper.vm as any).addScope = "user";
+        (wrapper.vm as any).addStatus = "active";
+        submitDialogForm();
+        await flush();
+
+        expect(mockMutate).not.toHaveBeenCalled();
+        expect(content!.textContent).toContain("Password must be at least 8 characters");
+    });
+
+    it("does not submit when the add phone number is invalid", async () => {
+        const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockUsers });
+        const content = await openDialog(wrapper, 0);
+
+        (wrapper.vm as any).addEmail = "new@example.com";
+        (wrapper.vm as any).addPassword = "password123";
+        (wrapper.vm as any).addScope = "user";
+        (wrapper.vm as any).addStatus = "active";
+        setDialogInput("add-phone", "123");
+        submitDialogForm();
+        await flush();
+
+        expect(mockMutate).not.toHaveBeenCalled();
+        expect(content!.textContent).toContain("Must be a valid phone number");
+    });
+
+    it("blocks non-superadmins from creating a SUPERADMIN user", async () => {
+        const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockUsers });
+        await openDialog(wrapper, 0);
+
+        (wrapper.vm as any).addEmail = "new@example.com";
+        (wrapper.vm as any).addPassword = "password123";
+        (wrapper.vm as any).addStatus = "active";
+        (wrapper.vm as any).addScope = "SUPERADMIN";
+        submitDialogForm();
+        await flush();
+
+        expect(mockMutate).not.toHaveBeenCalled();
+    });
+
+    it("allows superadmins to create a SUPERADMIN user", async () => {
+        const wrapper = mountUsers({ id: 1, scope: "SUPERADMIN" }, { users: mockUsers });
+        await openDialog(wrapper, 0);
+
+        (wrapper.vm as any).addEmail = "new@example.com";
+        (wrapper.vm as any).addPassword = "password123";
+        (wrapper.vm as any).addStatus = "active";
+        (wrapper.vm as any).addScope = "SUPERADMIN";
+        submitDialogForm();
+        await flush();
+
+        expect(mockMutate).toHaveBeenCalledTimes(1);
+        expect(mockMutate).toHaveBeenCalledWith(
+            expect.objectContaining({ email: "new@example.com", scope: "SUPERADMIN" }),
+        );
     });
 });

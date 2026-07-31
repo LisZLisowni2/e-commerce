@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\ScopeEnum;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
@@ -21,9 +21,23 @@ class UserController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
+        $data = $request->validate([
+            'email' => ['required', 'email', 'unique:users,email'],
+            'password' => ['required', 'string', 'min:8'],
+            'scope' => ['sometimes', 'string', 'in:user,admin,vendor,support,superadmin'],
+            'status' => ['sometimes', 'string', 'in:active,banned,inactive'],
+            'first_name' => ['nullable', 'string', 'max:255'],
+            'last_name' => ['nullable', 'string', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:30'],
+            'date_of_birth' => ['nullable', 'date'],
+            'gender' => ['nullable', 'string', 'in:man,woman,nonbinary'],
+        ]);
 
+        $user = User::create($data);
+
+        return response()->json(['user' => $user], 201);
     }
 
     /**

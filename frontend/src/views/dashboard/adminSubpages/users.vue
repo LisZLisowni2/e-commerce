@@ -9,7 +9,7 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { useUsers } from "@/composables/useUsers";
-import { CalendarIcon, Eraser, Pencil, Search } from "@lucide/vue";
+import { CalendarIcon, Eraser, Pencil, Search, UserPlus } from "@lucide/vue";
 import {
     Dialog,
     DialogContent,
@@ -51,9 +51,27 @@ const userSchema = z.object({
 
 type userSchemaType = z.infer<typeof userSchema>
 
-const { handleSubmit, defineField, errors } = useForm<userSchemaType>({
+const addUserSchema = z.object({
+    email: z.string().email(),
+    password: z.string().min(8, { message: "Password must be at least 8 characters" }),
+    scope: z.string(),
+    status: z.string(),
+    first_name: z.string().optional(),
+    last_name: z.string().optional(),
+    phone: z.string().regex(/^\+?[1-9]\d{7,14}$/, { message: "Must be a valid phone number" }).optional(),
+    date_of_birth: z.custom<DateValue>((val) => val !== null && val !== undefined, {
+        message: "Please select a date",
+    }).transform((val) => val.toDate(getLocalTimeZone())).optional(),
+    gender: z.string().optional()
+})
+
+type addUserSchemaType = z.infer<typeof addUserSchema>
+
+const editForm = useForm<userSchemaType>({
     validationSchema: toTypedSchema(userSchema)
 })
+
+const { handleSubmit, defineField, errors } = editForm
 
 const [email, emailAttrs] = defineField('email')
 const [scope, scopeAttrs] = defineField('scope')
@@ -63,7 +81,24 @@ const [lastname, lastnameAttrs] = defineField('last_name')
 const [phone, phoneAttrs] = defineField('phone')
 const [gender, genderAttrs] = defineField('gender')
 
-const { value: dateOfBirth } = useField<DateValue>('date_of_birth')
+const { value: dateOfBirth } = useField<DateValue>('date_of_birth', undefined, { form: editForm })
+
+const addForm = useForm<addUserSchemaType>({
+    validationSchema: toTypedSchema(addUserSchema)
+})
+
+const { errors: addErrors } = addForm
+
+const [addEmail, addEmailAttrs] = addForm.defineField('email')
+const [addPassword, addPasswordAttrs] = addForm.defineField('password')
+const [addScope, addScopeAttrs] = addForm.defineField('scope')
+const [addStatus, addStatusAttrs] = addForm.defineField('status')
+const [addFirstname, addFirstnameAttrs] = addForm.defineField('first_name')
+const [addLastname, addLastnameAttrs] = addForm.defineField('last_name')
+const [addPhone, addPhoneAttrs] = addForm.defineField('phone')
+const [addGender, addGenderAttrs] = addForm.defineField('gender')
+
+const { value: addDateOfBirth } = useField<DateValue>('date_of_birth', undefined, { form: addForm })
 
 const authStore = useAuthStore()
 const queryClient = useQueryClient()
@@ -90,6 +125,16 @@ const { mutate: deleteMutation } = useMutation({
     }
 })
 
+const { mutate: createMutation } = useMutation({
+    mutationFn: async (credentials: addUserSchemaType) => {
+        const { data } = await api.post(`/users`, credentials)
+        return data
+    },
+    onSuccess: () => {
+        queryClient.invalidateQueries()
+    }
+})
+
 const selectedUser = ref<number>(-1)
 
 const onSubmit = handleSubmit((values) => {
@@ -101,6 +146,12 @@ const onSubmit = handleSubmit((values) => {
         ...values,
         id: selectedUser.value
     })
+})
+
+const onAddSubmit = addForm.handleSubmit((values) => {
+    if (authStore.user?.scope !== "SUPERADMIN" && values.scope === "SUPERADMIN") return;
+
+    createMutation(values)
 })
 
 const onDelete = (userID: number) => {
@@ -123,12 +174,198 @@ const filteredData = computed(() => {
 <template>
     <h1 v-if="isLoading">Loading...</h1>
     <div v-else>
-        <InputGroup>
-            <InputGroupInput v-model="filterInput" placeholder="Search..." />
-            <InputGroupAddon>
-                <Search />
-            </InputGroupAddon>
-        </InputGroup>
+        <div class="flex items-center justify-between">
+            <InputGroup class="max-w-sm">
+                <InputGroupInput v-model="filterInput" placeholder="Search..." />
+                <InputGroupAddon>
+                    <Search />
+                </InputGroupAddon>
+            </InputGroup>
+            <Dialog>
+                <DialogTrigger as-child>
+                    <Button variant="outline">
+                        <UserPlus />
+                    </Button>
+                </DialogTrigger>
+                <DialogContent>
+                    <DialogTitle>
+                        Add User
+                    </DialogTitle>
+                    <form @submit.prevent="onAddSubmit" class="grid gap-3">
+                        <FormField>
+                            <Label for="add-email">Email</Label>
+                            <Input
+                                id="add-email"
+                                type="text"
+                                v-model="addEmail"
+                                v-bind="addEmailAttrs"
+                            />
+                            <span
+                                class="text-red-500"
+                                v-if="addErrors.email"
+                            >
+                                {{ addErrors.email }}
+                            </span>
+                        </FormField>
+                        <FormField>
+                            <Label for="add-password">Password</Label>
+                            <Input
+                                id="add-password"
+                                type="password"
+                                v-model="addPassword"
+                                v-bind="addPasswordAttrs"
+                            />
+                            <span
+                                class="text-red-500"
+                                v-if="addErrors.password"
+                            >
+                                {{ addErrors.password }}
+                            </span>
+                        </FormField>
+                        <FormField>
+                            <Label for="add-scope">Scope</Label>
+                            <Select id="add-scope" v-model="addScope" v-bind="addScopeAttrs">
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select a scope" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="user">
+                                        User
+                                    </SelectItem>
+                                    <SelectItem value="vendor">
+                                        Vendor
+                                    </SelectItem>
+                                    <SelectItem value="support">
+                                        Support
+                                    </SelectItem>
+                                    <SelectItem value="admin">
+                                        Admin
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <span
+                                class="text-red-500"
+                                v-if="addErrors.scope"
+                            >
+                                {{ addErrors.scope }}
+                            </span>
+                        </FormField>
+                        <FormField>
+                            <Label for="add-status">Status</Label>
+                            <Select id="add-status" v-model="addStatus" v-bind="addStatusAttrs">
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select a status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="active">
+                                        Active
+                                    </SelectItem>
+                                    <SelectItem value="banned">
+                                        Banned
+                                    </SelectItem>
+                                    <SelectItem value="inactive">
+                                        Inactive
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <span
+                                class="text-red-500"
+                                v-if="addErrors.status"
+                            >
+                                {{ addErrors.status }}
+                            </span>
+                        </FormField>
+                        <FormField>
+                            <Label for="add-firstname">Firstname</Label>
+                            <Input
+                                id="add-firstname"
+                                type="text"
+                                v-model="addFirstname"
+                                v-bind="addFirstnameAttrs"
+                            />
+                            <span
+                                class="text-red-500"
+                                v-if="addErrors.first_name"
+                            >
+                                {{ addErrors.first_name }}
+                            </span>
+                        </FormField>
+                        <FormField>
+                            <Label for="add-lastname">Lastname</Label>
+                            <Input
+                                id="add-lastname"
+                                type="text"
+                                v-model="addLastname"
+                                v-bind="addLastnameAttrs"
+                            />
+                            <span
+                                class="text-red-500"
+                                v-if="addErrors.last_name"
+                            >
+                                {{ addErrors.last_name }}
+                            </span>
+                        </FormField>
+                        <FormField>
+                            <Label for="add-phone">Phone</Label>
+                            <Input
+                                id="add-phone"
+                                type="text"
+                                v-model="addPhone"
+                                v-bind="addPhoneAttrs"
+                            />
+                            <span
+                                class="text-red-500"
+                                v-if="addErrors.phone"
+                            >
+                                {{ addErrors.phone }}
+                            </span>
+                        </FormField>
+                        <FormField>
+                            Date Of Birth:
+                            <Popover>
+                                <PopoverTrigger as-child>
+                                    <Button variant="outline">
+                                        <CalendarIcon class="mr-2 h-4 w-4" />
+                                        {{ addDateOfBirth ? addDateOfBirth.toString() : "Pick a date" }}
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent class="w-auto p-0">
+                                    <Calendar
+                                        v-model="addDateOfBirth"
+                                        :initial-focus="true"
+                                        layout="month-and-year"
+                                    />
+                                </PopoverContent>
+                            </Popover>
+                            <p class="text-sm py-2 text-red-500" v-if="addErrors.date_of_birth">{{ addErrors.date_of_birth }}</p>
+                        </FormField>
+                        <FormField>
+                            Gender:
+                                <Select v-bind="addGenderAttrs" v-model="addGender">
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select a gender" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="man">
+                                            Man
+                                        </SelectItem>
+                                        <SelectItem value="woman">
+                                            Woman
+                                        </SelectItem>
+                                        <SelectItem value="nonbinary">
+                                            Nonbinary
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            <p class="text-sm py-2 text-red-500" v-if="addErrors.gender">{{ addErrors.gender }}</p>
+                        </FormField>
+                        <DialogFooter>
+                            <Button>Add</Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
+        </div>
         <ScrollArea class="w-full whitespace-nowrap">
             <Table>
                 <TableCaption>A list of users</TableCaption>

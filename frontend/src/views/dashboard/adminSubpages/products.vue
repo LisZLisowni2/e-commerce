@@ -106,7 +106,7 @@ const filteredData = computed(() => {
 <template>
     <h1 v-if="isLoading">Loading...</h1>
     <div v-else>
-        <InputGroup>
+        <InputGroup class="max-w-sm">
             <InputGroupInput v-model="filterInput" placeholder="Search..." />
             <InputGroupAddon>
                 <Search />
