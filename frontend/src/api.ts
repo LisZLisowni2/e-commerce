@@ -18,7 +18,11 @@ api.interceptors.request.use((config) => {
     }
 
     config.headers.Accept = "application/json"
-    config.headers["Content-Type"] = "application/json"
+    if (!(config.data instanceof FormData)) {
+        config.headers["Content-Type"] = "application/json"
+    } else {
+        delete config.headers["Content-Type"]
+    }
     return config;
 })
 

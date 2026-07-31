@@ -6,6 +6,8 @@ use App\Models\Product;
 use App\ScopeEnum;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 class ProductController extends Controller
@@ -30,7 +32,7 @@ class ProductController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string'],
             'price' => ['required', 'numeric', 'min:0'],
-            'imageURL' => ['required', 'string'],
+            'image' => ['required', 'image'],
             'last30DaysPrice' => ['nullable', 'numeric', 'min:0'],
             'quantity' => ['required', 'integer', 'min:0'],
             'vendor_id' => $this->isManager($request)
@@ -39,6 +41,10 @@ class ProductController extends Controller
         ]);
 
         $data['vendor_id'] ??= $request->user()->id;
+
+        $path = Storage::putFile('', $data['image']);
+        unset($data['image']);
+        $data['imageURL'] = $path;
 
         $product = Product::create($data);
 
@@ -53,7 +59,7 @@ class ProductController extends Controller
             'name' => ['sometimes', 'string', 'max:255'],
             'description' => ['sometimes', 'string'],
             'price' => ['sometimes', 'numeric', 'min:0'],
-            'imageURL' => ['sometimes', 'string'],
+            'image' => ['sometimes', 'image'],
             'last30DaysPrice' => ['nullable', 'numeric', 'min:0'],
             'quantity' => ['sometimes', 'integer', 'min:0'],
             'vendor_id' => $this->isManager($request)
@@ -61,6 +67,12 @@ class ProductController extends Controller
                 : ['prohibited'],
         ]);
 
+        if (isset($data['image'])) {
+            $path = Storage::putFile('', $data['image']);
+            unset($data['image']);
+            $data['imageURL'] = Storage::url($path);
+        }
+        
         $product->update($data);
 
         return response()->json($product);

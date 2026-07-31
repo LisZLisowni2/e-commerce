@@ -32,12 +32,21 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { useAuthStore } from "@/stores/useAuthStore";
 
+const authStore = useAuthStore();
+
+const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5 MB
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+
 const productSchema = z.object({
     name: z.string().optional(),
     description: z.string().optional(),
     price: z.coerce.number().min(0).optional(),
     quantity: z.coerce.number().int().positive().optional(),
-    imageURL: z.string().optional(),
+    image: 
+        z.any()
+            .refine((file) => file?.size <= MAX_FILE_SIZE, "Max image size if 5MB")
+            .refine((file) => ACCEPTED_IMAGE_TYPES.includes(file?.type), "Only .jpg, .jpeg, .png and .webp formats are supported.")
+            .optional(),
     last30DaysPrice: z.coerce.number().min(0).optional(),
 })
 
@@ -48,7 +57,10 @@ const addProductSchema = z.object({
     description: z.string({ message: "Description is required" }).min(1, { message: "Description is required" }),
     price: z.coerce.number({ message: "Number must be greater than 0" }).min(0, { message: "Number must be greater than 0" }),
     quantity: z.coerce.number({ message: "Number must be greater than 0" }).int().positive({ message: "Number must be greater than 0" }),
-    imageURL: z.string({ message: "Image URL is required" }).min(1, { message: "Image URL is required" }),
+    image: 
+        z.any()
+            .refine((file) => file?.size <= MAX_FILE_SIZE, "Max image size if 5MB")
+            .refine((file) => ACCEPTED_IMAGE_TYPES.includes(file?.type), "Only .jpg, .jpeg, .png and .webp formats are supported."),
     last30DaysPrice: z.coerce.number({ message: "Number must be greater than 0" }).min(0).optional(),
 })
 
@@ -64,7 +76,7 @@ const [name, nameAttrs] = defineField('name')
 const [description, descriptionAttrs] = defineField('description')
 const [price, priceAttrs] = defineField('price')
 const [quantity, quantityAttrs] = defineField('quantity')
-const [imageURL, imageURLAttrs] = defineField('imageURL')
+const [image, imageAttrs] = defineField('image')
 const [last30DaysPrice, last30DaysPriceAttrs] = defineField('last30DaysPrice')
 
 const addForm = useForm<addProductSchemaType>({
@@ -77,7 +89,7 @@ const [addName, addNameAttrs] = addForm.defineField('name')
 const [addDescription, addDescriptionAttrs] = addForm.defineField('description')
 const [addPrice, addPriceAttrs] = addForm.defineField('price')
 const [addQuantity, addQuantityAttrs] = addForm.defineField('quantity')
-const [addImageURL, addImageURLAttrs] = addForm.defineField('imageURL')
+const [addImage, addImageAttrs] = addForm.defineField('image')
 const [addLast30DaysPrice, addLast30DaysPriceAttrs] = addForm.defineField('last30DaysPrice')
 
 const queryClient = useQueryClient()
@@ -86,8 +98,25 @@ const { mutate: updateMutation } = useMutation({
     mutationFn: async (credentials: productSchemaType & {
         id: number
     }) => {
-        const { data } = await api.put(`/products/${credentials.id}`, credentials)
-        return data
+        if (credentials.image) {
+            const formData = new FormData()
+            formData.append('image', credentials.image)
+            
+            if (credentials.name) formData.append('name', credentials.name)
+            if (credentials.description) formData.append('description', credentials.description)
+            if (credentials.price !== undefined) formData.append('price', String(credentials.price))
+            if (credentials.quantity !== undefined) formData.append('quantity', String(credentials.quantity))
+            if (credentials.last30DaysPrice !== undefined) formData.append('last30DaysPrice', String(credentials.last30DaysPrice))
+    
+            // Laravel needs method spoofing for PUT + multipart form data
+            formData.append('_method', 'PUT')
+    
+            const { data } = await api.put(`/products/${credentials.id}`, formData)
+            return data
+        } else {
+            const { data } = await api.put(`/products/${credentials.id}`, credentials)
+            return data
+        }
     },
     onSuccess: () => {
         queryClient.invalidateQueries()
@@ -106,7 +135,17 @@ const { mutate: deleteMutation } = useMutation({
 
 const { mutate: createMutation } = useMutation({
     mutationFn: async (credentials: addProductSchemaType) => {
-        const { data } = await api.post(`/products`, credentials)
+        const formData = new FormData()
+        formData.append('name', credentials.name)
+        formData.append('description', credentials.description)
+        formData.append('price', String(credentials.price))
+        formData.append('quantity', String(credentials.quantity))
+        formData.append('image', credentials.image) // actual File object
+
+        if (credentials.last30DaysPrice !== undefined) {
+            formData.append('last30DaysPrice', String(credentials.last30DaysPrice))
+        }
+        const { data } = await api.post(`/products`, formData)
         return data
     },
     onSuccess: () => {
@@ -133,8 +172,6 @@ const onDelete = (productID: number) => {
     deleteMutation(productID)
 }
 
-const authStore = useAuthStore();
-
 const { data, isLoading } = useProducts(authStore.user?.id);
 
 const filterInput = ref("")
@@ -144,6 +181,17 @@ const filteredData = computed(() => {
         return product.name.toLowerCase().startsWith(filterInput.value.toLocaleLowerCase())
     })
 })
+
+function handleFileChangesAdd(event) {
+    const file = event.target.files[0];
+    addImage.value = file
+}
+
+function handleFileChanges(event) {
+    const file = event.target.files[0];
+    image.value = file
+}
+
 </script>
 
 <template>
@@ -228,12 +276,13 @@ const filteredData = computed(() => {
                             </span>
                         </FormField>
                         <FormField>
-                            <Label for="add-imageURL">Image URL</Label>
-                            <Input
-                                id="add-imageURL"
-                                type="text"
-                                v-model="addImageURL"
-                                v-bind="addImageURLAttrs"
+                            <Label for="add-image">Image</Label>
+                            <input
+                                id="add-image"
+                                type="file"
+                                class="border rounded-xl p-2 max-w-sm"
+                                @change="handleFileChangesAdd"
+                                v-bind="addImageAttrs"
                             />
                             <span
                                 class="text-red-500"
@@ -370,13 +419,13 @@ const filteredData = computed(() => {
                                             </span>
                                         </FormField>
                                         <FormField>
-                                            <Label for="imageURL">Image URL</Label>
-                                            <Input
-                                                id="imageURL"
-                                                type="text"
-                                                v-model="imageURL"
-                                                v-bind="imageURLAttrs"
-                                                :default-value="product.imageURL"
+                                            <Label for="image">New image</Label>
+                                            <input
+                                                id="image"
+                                                type="file"
+                                                class="border rounded-xl p-2 max-w-sm"
+                                                @change="handleFileChanges"
+                                                v-bind="imageAttrs"
                                             />
                                             <span
                                                 class="text-red-500"
