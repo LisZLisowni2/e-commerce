@@ -47,7 +47,21 @@ const routes: RouteRecordRaw[] = [
         path: "/vendor/dashboard",
         name: "vendorDashboard",
         component: () => import("@/views/dashboard/vendorDashboard.vue"),
-        meta: { requiresAuth: true, requiredRoles: ["vendor", "superadmin"] },
+        meta: { requiresAuth: true, requiredRoles: ["vendor", "superadmin"], layout: "vendor-dashboard" },
+        children: [
+            {
+                path: "",
+                component: () => import("@/views/dashboard/vendorDashboard.vue")
+            },
+            {
+                path: "products",
+                component: () => import("@/views/dashboard/vendorSubpages/products.vue")
+            },
+            {
+                path: "notifications",
+                component: () => import("@/views/dashboard/vendorDashboard.vue")
+            },
+        ]
     },
     {
         path: "/support/dashboard",

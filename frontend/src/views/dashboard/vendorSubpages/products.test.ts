@@ -1,11 +1,9 @@
 import { mount } from "@vue/test-utils";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { ref } from "vue";
-import products from "@/views/dashboard/adminSubpages/products.vue";
+import products from "@/views/dashboard/vendorSubpages/products.vue";
 import { useProducts } from "@/composables/useProducts";
-import { useUsers } from "@/composables/useUsers";
 import type { Product } from "@/types/Product";
-import type { User } from "@/types/User";
 
 const mockMutate = vi.fn();
 
@@ -30,8 +28,10 @@ vi.mock("@/composables/useProducts", () => ({
     useProducts: vi.fn(),
 }));
 
-vi.mock("@/composables/useUsers", () => ({
-    useUsers: vi.fn(),
+vi.mock("@/stores/useAuthStore", () => ({
+    useAuthStore: vi.fn(() => ({
+        user: { id: 1, scope: "vendor" },
+    })),
 }));
 
 const mockProducts: Product[] = [
@@ -49,7 +49,7 @@ const mockProducts: Product[] = [
     },
     {
         id: 2,
-        vendor_id: 2,
+        vendor_id: 1,
         name: "MacBook Pro",
         description: "Laptop",
         price: 12999.99,
@@ -61,33 +61,10 @@ const mockProducts: Product[] = [
     },
 ];
 
-const mockVendors: User[] = [
-    {
-        id: 1,
-        email: "vendor1@example.com",
-        password: "password",
-        scope: "vendor",
-        status: "active",
-    },
-    {
-        id: 2,
-        email: "vendor2@example.com",
-        password: "password",
-        scope: "vendor",
-        status: "active",
-    },
-];
-
 const mountProducts = (data: Product[] | undefined = undefined, isLoading = false) => {
     vi.mocked(useProducts).mockReturnValue({
         data: ref(data),
         isLoading: ref(isLoading),
-        error: null,
-    } as any);
-
-    vi.mocked(useUsers).mockReturnValue({
-        data: ref({ users: mockVendors }),
-        isLoading: ref(false),
         error: null,
     } as any);
 
@@ -113,15 +90,7 @@ const submitDialogForm = () => {
     form!.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
 };
 
-const clickDialogButton = (text: string) => {
-    const content = document.body.querySelector<HTMLElement>('[data-slot="dialog-content"]')!;
-    const button = Array.from(content.querySelectorAll("button")).find(
-        (b) => b.textContent === text,
-    );
-    button!.click();
-};
-
-describe("products.vue", () => {
+describe("vendor products.vue", () => {
     beforeEach(() => {
         vi.clearAllMocks();
         document.body.innerHTML = "";
@@ -130,11 +99,6 @@ describe("products.vue", () => {
     it("shows loading state", () => {
         const wrapper = mountProducts(undefined, true);
         expect(wrapper.text()).toContain("Loading...");
-    });
-
-    it("does not render the table while loading", () => {
-        const wrapper = mountProducts(undefined, true);
-        expect(wrapper.text()).not.toContain("A list of products");
     });
 
     it("renders products when data is available", () => {
@@ -154,11 +118,11 @@ describe("products.vue", () => {
         expect(wrapper.text()).toContain("2026-01-02");
     });
 
-    it("renders table headers", () => {
+    it("renders table headers without vendor column", () => {
         const wrapper = mountProducts(mockProducts);
         expect(wrapper.text()).toContain("A list of products");
         expect(wrapper.text()).toContain("ID");
-        expect(wrapper.text()).toContain("Vendor ID");
+        expect(wrapper.text()).not.toContain("Vendor ID");
         expect(wrapper.text()).toContain("Name");
         expect(wrapper.text()).toContain("Description");
         expect(wrapper.text()).toContain("Price");
@@ -177,19 +141,6 @@ describe("products.vue", () => {
         expect(wrapper.text()).not.toContain("MacBook Pro");
     });
 
-    it("shows no rows when the filter matches nothing", async () => {
-        const wrapper = mountProducts(mockProducts);
-        await wrapper.find("input").setValue("nonexistent");
-        expect(wrapper.text()).not.toContain("RTX 5070");
-        expect(wrapper.text()).not.toContain("MacBook Pro");
-    });
-
-    it("renders an empty table when there are no products", () => {
-        const wrapper = mountProducts([]);
-        expect(wrapper.text()).toContain("A list of products");
-        expect(wrapper.text()).not.toContain("RTX 5070");
-    });
-
     it("renders an edit, delete, and add button", () => {
         const wrapper = mountProducts(mockProducts);
         expect(wrapper.findAll("button").length).toBe(5);
@@ -200,12 +151,6 @@ describe("products.vue", () => {
         const content = await openDialog(wrapper, 1);
         expect(content).toBeTruthy();
         expect(content!.textContent).toContain("Edit Product of ID 1");
-    });
-
-    it("opens the edit dialog for the second product", async () => {
-        const wrapper = mountProducts(mockProducts);
-        const content = await openDialog(wrapper, 3);
-        expect(content!.textContent).toContain("Edit Product of ID 2");
     });
 
     it("prefills the form with the product name", async () => {
@@ -249,7 +194,11 @@ describe("products.vue", () => {
     it("calls the delete mutation when Yes is clicked", async () => {
         const wrapper = mountProducts(mockProducts);
         await openDialog(wrapper, 2);
-        clickDialogButton("Yes");
+        const content = document.body.querySelector<HTMLElement>('[data-slot="dialog-content"]')!;
+        const button = Array.from(content.querySelectorAll("button")).find(
+            (b) => b.textContent === "Yes",
+        );
+        button!.click();
         await flush();
 
         expect(mockMutate).toHaveBeenCalledTimes(1);
@@ -263,7 +212,7 @@ describe("products.vue", () => {
         expect(content!.textContent).toContain("Add Product");
     });
 
-    it("submits the add form with valid values", async () => {
+    it("submits the add form with valid values without vendor_id", async () => {
         const wrapper = mountProducts(mockProducts);
         await openDialog(wrapper, 0);
 
@@ -272,7 +221,6 @@ describe("products.vue", () => {
         (wrapper.vm as any).addPrice = "499.99";
         (wrapper.vm as any).addQuantity = "10";
         (wrapper.vm as any).addImageURL = "/new-gpu.jpg";
-        (wrapper.vm as any).addVendorId = "1";
         submitDialogForm();
         await flush();
 
@@ -284,8 +232,10 @@ describe("products.vue", () => {
                 price: 499.99,
                 quantity: 10,
                 imageURL: "/new-gpu.jpg",
-                vendor_id: 1,
             }),
+        );
+        expect(mockMutate).toHaveBeenCalledWith(
+            expect.not.objectContaining({ vendor_id: expect.anything() }),
         );
     });
 
@@ -293,7 +243,6 @@ describe("products.vue", () => {
         const wrapper = mountProducts(mockProducts);
         const content = await openDialog(wrapper, 0);
 
-        (wrapper.vm as any).addVendorId = "1";
         submitDialogForm();
         await flush();
 
@@ -310,36 +259,11 @@ describe("products.vue", () => {
         (wrapper.vm as any).addDescription = "A new graphics card";
         (wrapper.vm as any).addPrice = "499.99";
         (wrapper.vm as any).addImageURL = "/new-gpu.jpg";
-        (wrapper.vm as any).addVendorId = "1";
         setDialogInput("add-quantity", "-1");
         submitDialogForm();
         await flush();
 
         expect(mockMutate).not.toHaveBeenCalled();
         expect(content!.textContent).toContain("Number must be greater than 0");
-    });
-
-    it("does not submit when no vendor is selected", async () => {
-        const wrapper = mountProducts(mockProducts);
-        const content = await openDialog(wrapper, 0);
-
-        (wrapper.vm as any).addName = "New GPU";
-        (wrapper.vm as any).addDescription = "A new graphics card";
-        (wrapper.vm as any).addPrice = "499.99";
-        (wrapper.vm as any).addQuantity = "10";
-        (wrapper.vm as any).addImageURL = "/new-gpu.jpg";
-        submitDialogForm();
-        await flush();
-
-        expect(mockMutate).not.toHaveBeenCalled();
-        expect(content!.textContent).toContain("Please select a vendor");
-    });
-
-    it("lists vendors in the add form dropdown", async () => {
-        const wrapper = mountProducts(mockProducts);
-        await openDialog(wrapper, 0);
-        const content = document.body.querySelector<HTMLElement>('[data-slot="dialog-content"]')!;
-        expect(content.textContent).toContain("vendor1@example.com");
-        expect(content.textContent).toContain("vendor2@example.com");
     });
 });

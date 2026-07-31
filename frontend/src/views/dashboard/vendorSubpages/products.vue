@@ -9,8 +9,6 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { useProducts } from "@/composables/useProducts";
-import { useUsers } from "@/composables/useUsers";
-import type { User } from "@/types/User";
 import { Eraser, Pencil, Search, UserPlus } from "@lucide/vue";
 import {
     Dialog,
@@ -32,6 +30,7 @@ import api from "@/api";
 import { computed, ref } from "vue";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
+import { useAuthStore } from "@/stores/useAuthStore";
 
 const productSchema = z.object({
     name: z.string().optional(),
@@ -40,7 +39,6 @@ const productSchema = z.object({
     quantity: z.coerce.number().int().positive().optional(),
     imageURL: z.string().optional(),
     last30DaysPrice: z.coerce.number().min(0).optional(),
-    vendor_id: z.coerce.number().positive().optional(),
 })
 
 type productSchemaType = z.infer<typeof productSchema>
@@ -52,7 +50,6 @@ const addProductSchema = z.object({
     quantity: z.coerce.number({ message: "Number must be greater than 0" }).int().positive({ message: "Number must be greater than 0" }),
     imageURL: z.string({ message: "Image URL is required" }).min(1, { message: "Image URL is required" }),
     last30DaysPrice: z.coerce.number({ message: "Number must be greater than 0" }).min(0).optional(),
-    vendor_id: z.coerce.number({ message: "Please select a vendor" }).min(1, { message: "Please select a vendor" }),
 })
 
 type addProductSchemaType = z.infer<typeof addProductSchema>
@@ -69,7 +66,6 @@ const [price, priceAttrs] = defineField('price')
 const [quantity, quantityAttrs] = defineField('quantity')
 const [imageURL, imageURLAttrs] = defineField('imageURL')
 const [last30DaysPrice, last30DaysPriceAttrs] = defineField('last30DaysPrice')
-const [vendorId, vendorIdAttrs] = defineField('vendor_id')
 
 const addForm = useForm<addProductSchemaType>({
     validationSchema: toTypedSchema(addProductSchema)
@@ -83,7 +79,6 @@ const [addPrice, addPriceAttrs] = addForm.defineField('price')
 const [addQuantity, addQuantityAttrs] = addForm.defineField('quantity')
 const [addImageURL, addImageURLAttrs] = addForm.defineField('imageURL')
 const [addLast30DaysPrice, addLast30DaysPriceAttrs] = addForm.defineField('last30DaysPrice')
-const [addVendorId, addVendorIdAttrs] = addForm.defineField('vendor_id')
 
 const queryClient = useQueryClient()
 
@@ -138,12 +133,9 @@ const onDelete = (productID: number) => {
     deleteMutation(productID)
 }
 
-const { data, isLoading } = useProducts();
-const { data: usersData } = useUsers();
+const authStore = useAuthStore();
 
-const vendors = computed(() => {
-    return (usersData.value?.users ?? []).filter((user: User) => user.scope === "vendor")
-})
+const { data, isLoading } = useProducts(authStore.user?.id);
 
 const filterInput = ref("")
 
@@ -265,25 +257,6 @@ const filteredData = computed(() => {
                                 {{ addErrors.last30DaysPrice }}
                             </span>
                         </FormField>
-                        <FormField>
-                            <Label for="add-vendor">Vendor</Label>
-                            <Select v-model="addVendorId" v-bind="addVendorIdAttrs">
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select a vendor" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem v-for="vendor in vendors" :key="vendor.id" :value="String(vendor.id)">
-                                        {{ vendor.email }}
-                                    </SelectItem>
-                                </SelectContent>
-                            </Select>
-                            <span
-                                class="text-red-500"
-                                v-if="addErrors.vendor_id"
-                            >
-                                {{ addErrors.vendor_id }}
-                            </span>
-                        </FormField>
                         <DialogFooter>
                             <Button>Add</Button>
                         </DialogFooter>
@@ -297,7 +270,6 @@ const filteredData = computed(() => {
                 <TableHeader>
                     <TableRow>
                         <TableHead>ID</TableHead>
-                        <TableHead>Vendor ID</TableHead>
                         <TableHead>Name</TableHead>
                         <TableHead>Description</TableHead>
                         <TableHead>Price</TableHead>
@@ -313,7 +285,6 @@ const filteredData = computed(() => {
                 <TableBody>
                     <TableRow v-for="product in filteredData">
                         <TableCell>{{ product.id }}</TableCell>
-                        <TableCell>{{ product.vendor_id }}</TableCell>
                         <TableCell>{{ product.name }}</TableCell>
                         <TableCell>{{ product.description.substring(0, 100) }}</TableCell>
                         <TableCell>{{ product.price }}</TableCell>
@@ -428,25 +399,6 @@ const filteredData = computed(() => {
                                                 v-if="errors.last30DaysPrice"
                                             >
                                                 {{ errors.last30DaysPrice }}
-                                            </span>
-                                        </FormField>
-                                        <FormField>
-                                            <Label for="vendor">Vendor</Label>
-                                            <Select :default-value="String(product.vendor_id)" v-model="vendorId" v-bind="vendorIdAttrs">
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Select a vendor" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem v-for="vendor in vendors" :key="vendor.id" :value="String(vendor.id)">
-                                                        {{ vendor.email }}
-                                                    </SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                            <span
-                                                class="text-red-500"
-                                                v-if="errors.vendor_id"
-                                            >
-                                                {{ errors.vendor_id }}
                                             </span>
                                         </FormField>
                                         <DialogFooter>

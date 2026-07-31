@@ -3,14 +3,20 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\ScopeEnum;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class ProductController extends Controller
 {
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        return response()->json(["products" => Product::all()]);
+        $products = Product::query()
+            ->when($request->has('vendor_id'), fn ($query) => $query->where('vendor_id', $request->integer('vendor_id')))
+            ->get();
+
+        return response()->json(["products" => $products]);
     }
 
     public function show(Product $product): JsonResponse
@@ -26,7 +32,13 @@ class ProductController extends Controller
             'price' => ['required', 'numeric', 'min:0'],
             'imageURL' => ['required', 'string'],
             'last30DaysPrice' => ['nullable', 'numeric', 'min:0'],
+            'quantity' => ['required', 'integer', 'min:0'],
+            'vendor_id' => $this->isManager($request)
+                ? ['required', 'integer', Rule::exists('users', 'id')->where('scope', ScopeEnum::VENDOR->value)]
+                : ['prohibited'],
         ]);
+
+        $data['vendor_id'] ??= $request->user()->id;
 
         $product = Product::create($data);
 
@@ -35,12 +47,18 @@ class ProductController extends Controller
 
     public function update(Request $request, Product $product): JsonResponse
     {
+        $this->authorizeProduct($request, $product);
+
         $data = $request->validate([
             'name' => ['sometimes', 'string', 'max:255'],
             'description' => ['sometimes', 'string'],
             'price' => ['sometimes', 'numeric', 'min:0'],
             'imageURL' => ['sometimes', 'string'],
             'last30DaysPrice' => ['nullable', 'numeric', 'min:0'],
+            'quantity' => ['sometimes', 'integer', 'min:0'],
+            'vendor_id' => $this->isManager($request)
+                ? ['sometimes', 'integer', Rule::exists('users', 'id')->where('scope', ScopeEnum::VENDOR->value)]
+                : ['prohibited'],
         ]);
 
         $product->update($data);
@@ -48,10 +66,24 @@ class ProductController extends Controller
         return response()->json($product);
     }
 
-    public function destroy(Product $product): JsonResponse
+    public function destroy(Request $request, Product $product): JsonResponse
     {
+        $this->authorizeProduct($request, $product);
+
         $product->delete();
 
         return response()->json(null, 204);
+    }
+
+    private function isManager(Request $request): bool
+    {
+        return in_array($request->user()->scope, [ScopeEnum::ADMIN, ScopeEnum::SUPERADMIN], true);
+    }
+
+    private function authorizeProduct(Request $request, Product $product): void
+    {
+        if (! $this->isManager($request) && $product->vendor_id !== $request->user()->id) {
+            abort(403, 'Unauthorized access to this resource.');
+        }
     }
 }
