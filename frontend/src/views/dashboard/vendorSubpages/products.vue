@@ -9,7 +9,7 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { useProducts } from "@/composables/useProducts";
-import { Eraser, Pencil, Search, UserPlus } from "@lucide/vue";
+import { Eraser, Pencil, Plug, Plus, Search, UserPlus } from "@lucide/vue";
 import {
     Dialog,
     DialogContent,
@@ -159,7 +159,7 @@ const filteredData = computed(() => {
             <Dialog>
                 <DialogTrigger as-child>
                     <Button variant="outline">
-                        <UserPlus />
+                        <Plus />
                     </Button>
                 </DialogTrigger>
                 <DialogContent>
