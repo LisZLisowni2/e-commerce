@@ -9,7 +9,7 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { useProducts } from "@/composables/useProducts";
-import { Eraser, Pencil } from "@lucide/vue";
+import { Eraser, Pencil, Search } from "@lucide/vue";
 import {
     Dialog,
     DialogContent,
@@ -27,8 +27,9 @@ import { useForm } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useMutation, useQueryClient } from "@tanstack/vue-query";
 import api from "@/api";
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 
 const productSchema = z.object({
     name: z.string().optional(),
@@ -92,181 +93,197 @@ const onDelete = (productID: number) => {
 }
 
 const { data, isLoading } = useProducts();
+
+const filterInput = ref("")
+
+const filteredData = computed(() => {
+    return data.value?.filter((product) => {
+        return product.name.toLowerCase().startsWith(filterInput.value.toLocaleLowerCase())
+    })
+})
 </script>
 
 <template>
     <h1 v-if="isLoading">Loading...</h1>
-    <ScrollArea class="w-full whitespace-nowrap">
-        <Table>
-            <TableCaption>A list of products</TableCaption>
-            <TableHeader>
-                <TableRow>
-                    <TableHead>ID</TableHead>
-                    <TableHead>Vendor ID</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead>Price</TableHead>
-                    <TableHead>Quantity</TableHead>
-                    <TableHead>Image URL</TableHead>
-                    <TableHead>Last 30 Days Price</TableHead>
-                    <TableHead>Created at</TableHead>
-                    <TableHead>Updated at</TableHead>
-                    <TableHead></TableHead>
-                    <TableHead></TableHead>
-                </TableRow>
-            </TableHeader>
-            <TableBody>
-                <TableRow v-for="product in data">
-                    <TableCell>{{ product.id }}</TableCell>
-                    <TableCell>{{ product.vendor_id }}</TableCell>
-                    <TableCell>{{ product.name }}</TableCell>
-                    <TableCell>{{ product.description }}</TableCell>
-                    <TableCell>{{ product.price }}</TableCell>
-                    <TableCell>{{ product.quantity }}</TableCell>
-                    <TableCell>{{ product.imageURL }}</TableCell>
-                    <TableCell>{{ product.last30DaysPrice }}</TableCell>
-                    <TableCell>{{ product.created_at }}</TableCell>
-                    <TableCell>{{ product.updated_at }}</TableCell>
-                    <TableCell>
-                        <Dialog>
-                            <DialogTrigger as-child>
-                                <Button variant="outline" @click="selectedProduct = product.id">
-                                    <Pencil />
-                                </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                                <DialogTitle>
-                                    Edit Product of ID {{ product.id }}
-                                </DialogTitle>
-                                <form @submit.prevent="onSubmit" class="grid gap-3">
-                                    <FormField>
-                                        <Label for="name">Name</Label>
-                                        <Input
-                                            id="name"
-                                            type="text"
-                                            v-model="name"
-                                            v-bind="nameAttrs"
-                                            :default-value="product.name"
-                                        />
-                                        <span
-                                            class="text-red-500"
-                                            v-if="errors.name"
-                                        >
-                                            {{ errors.name }}
-                                        </span>
-                                    </FormField>
-                                    <FormField>
-                                        <Label for="description">Description</Label>
-                                        <Input
-                                            id="description"
-                                            type="text"
-                                            v-model="description"
-                                            v-bind="descriptionAttrs"
-                                            :default-value="product.description"
-                                        />
-                                        <span
-                                            class="text-red-500"
-                                            v-if="errors.description"
-                                        >
-                                            {{ errors.description }}
-                                        </span>
-                                    </FormField>
-                                    <FormField>
-                                        <Label for="price">Price</Label>
-                                        <Input
-                                            id="price"
-                                            type="text"
-                                            v-model="price"
-                                            v-bind="priceAttrs"
-                                            :default-value="product.price"
-                                        />
-                                        <span
-                                            class="text-red-500"
-                                            v-if="errors.price"
-                                        >
-                                            {{ errors.price }}
-                                        </span>
-                                    </FormField>
-                                    <FormField>
-                                        <Label for="quantity">Quantity</Label>
-                                        <Input
-                                            id="quantity"
-                                            type="text"
-                                            v-model="quantity"
-                                            v-bind="quantityAttrs"
-                                            :default-value="product.quantity"
-                                        />
-                                        <span
-                                            class="text-red-500"
-                                            v-if="errors.quantity"
-                                        >
-                                            {{ errors.quantity }}
-                                        </span>
-                                    </FormField>
-                                    <FormField>
-                                        <Label for="imageURL">Image URL</Label>
-                                        <Input
-                                            id="imageURL"
-                                            type="text"
-                                            v-model="imageURL"
-                                            v-bind="imageURLAttrs"
-                                            :default-value="product.imageURL"
-                                        />
-                                        <span
-                                            class="text-red-500"
-                                            v-if="errors.imageURL"
-                                        >
-                                            {{ errors.imageURL }}
-                                        </span>
-                                    </FormField>
-                                    <FormField>
-                                        <Label for="last30DaysPrice">Last 30 Days Price</Label>
-                                        <Input
-                                            id="last30DaysPrice"
-                                            type="text"
-                                            v-model="last30DaysPrice"
-                                            v-bind="last30DaysPriceAttrs"
-                                            :default-value="product.last30DaysPrice"
-                                        />
-                                        <span
-                                            class="text-red-500"
-                                            v-if="errors.last30DaysPrice"
-                                        >
-                                            {{ errors.last30DaysPrice }}
-                                        </span>
-                                    </FormField>
+    <div v-else>
+        <InputGroup>
+            <InputGroupInput v-model="filterInput" placeholder="Search..." />
+            <InputGroupAddon>
+                <Search />
+            </InputGroupAddon>
+        </InputGroup>
+        <ScrollArea class="w-full whitespace-nowrap">
+            <Table>
+                <TableCaption>A list of products</TableCaption>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>ID</TableHead>
+                        <TableHead>Vendor ID</TableHead>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Description</TableHead>
+                        <TableHead>Price</TableHead>
+                        <TableHead>Quantity</TableHead>
+                        <TableHead>Image URL</TableHead>
+                        <TableHead>Last 30 Days Price</TableHead>
+                        <TableHead>Created at</TableHead>
+                        <TableHead>Updated at</TableHead>
+                        <TableHead></TableHead>
+                        <TableHead></TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    <TableRow v-for="product in filteredData">
+                        <TableCell>{{ product.id }}</TableCell>
+                        <TableCell>{{ product.vendor_id }}</TableCell>
+                        <TableCell>{{ product.name }}</TableCell>
+                        <TableCell>{{ product.description }}</TableCell>
+                        <TableCell>{{ product.price }}</TableCell>
+                        <TableCell>{{ product.quantity }}</TableCell>
+                        <TableCell>{{ product.imageURL }}</TableCell>
+                        <TableCell>{{ product.last30DaysPrice }}</TableCell>
+                        <TableCell>{{ product.created_at }}</TableCell>
+                        <TableCell>{{ product.updated_at }}</TableCell>
+                        <TableCell>
+                            <Dialog>
+                                <DialogTrigger as-child>
+                                    <Button variant="outline" @click="selectedProduct = product.id">
+                                        <Pencil />
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                    <DialogTitle>
+                                        Edit Product of ID {{ product.id }}
+                                    </DialogTitle>
+                                    <form @submit.prevent="onSubmit" class="grid gap-3">
+                                        <FormField>
+                                            <Label for="name">Name</Label>
+                                            <Input
+                                                id="name"
+                                                type="text"
+                                                v-model="name"
+                                                v-bind="nameAttrs"
+                                                :default-value="product.name"
+                                            />
+                                            <span
+                                                class="text-red-500"
+                                                v-if="errors.name"
+                                            >
+                                                {{ errors.name }}
+                                            </span>
+                                        </FormField>
+                                        <FormField>
+                                            <Label for="description">Description</Label>
+                                            <Input
+                                                id="description"
+                                                type="text"
+                                                v-model="description"
+                                                v-bind="descriptionAttrs"
+                                                :default-value="product.description"
+                                            />
+                                            <span
+                                                class="text-red-500"
+                                                v-if="errors.description"
+                                            >
+                                                {{ errors.description }}
+                                            </span>
+                                        </FormField>
+                                        <FormField>
+                                            <Label for="price">Price</Label>
+                                            <Input
+                                                id="price"
+                                                type="text"
+                                                v-model="price"
+                                                v-bind="priceAttrs"
+                                                :default-value="product.price"
+                                            />
+                                            <span
+                                                class="text-red-500"
+                                                v-if="errors.price"
+                                            >
+                                                {{ errors.price }}
+                                            </span>
+                                        </FormField>
+                                        <FormField>
+                                            <Label for="quantity">Quantity</Label>
+                                            <Input
+                                                id="quantity"
+                                                type="text"
+                                                v-model="quantity"
+                                                v-bind="quantityAttrs"
+                                                :default-value="product.quantity"
+                                            />
+                                            <span
+                                                class="text-red-500"
+                                                v-if="errors.quantity"
+                                            >
+                                                {{ errors.quantity }}
+                                            </span>
+                                        </FormField>
+                                        <FormField>
+                                            <Label for="imageURL">Image URL</Label>
+                                            <Input
+                                                id="imageURL"
+                                                type="text"
+                                                v-model="imageURL"
+                                                v-bind="imageURLAttrs"
+                                                :default-value="product.imageURL"
+                                            />
+                                            <span
+                                                class="text-red-500"
+                                                v-if="errors.imageURL"
+                                            >
+                                                {{ errors.imageURL }}
+                                            </span>
+                                        </FormField>
+                                        <FormField>
+                                            <Label for="last30DaysPrice">Last 30 Days Price</Label>
+                                            <Input
+                                                id="last30DaysPrice"
+                                                type="text"
+                                                v-model="last30DaysPrice"
+                                                v-bind="last30DaysPriceAttrs"
+                                                :default-value="product.last30DaysPrice"
+                                            />
+                                            <span
+                                                class="text-red-500"
+                                                v-if="errors.last30DaysPrice"
+                                            >
+                                                {{ errors.last30DaysPrice }}
+                                            </span>
+                                        </FormField>
+                                        <DialogFooter>
+                                            <Button>Edit</Button>
+                                        </DialogFooter>
+                                    </form>
+                                </DialogContent>
+                            </Dialog>
+                        </TableCell>
+                        <TableCell>
+                            <Dialog>
+                                <DialogTrigger as-child> 
+                                    <Button variant="outline">
+                                        <Eraser />
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                    <DialogTitle>
+                                        Deletion of product of ID {{ product.id }}
+                                    </DialogTitle>
+                                    Are you sure?
                                     <DialogFooter>
-                                        <Button>Edit</Button>
+                                        <DialogClose class="flex gap-3">
+                                            <Button variant="destructive" @click="onDelete(product.id)">Yes</Button>
+                                            <Button variant="outline">No</Button>
+                                        </DialogClose>
                                     </DialogFooter>
-                                </form>
-                            </DialogContent>
-                        </Dialog>
-                    </TableCell>
-                    <TableCell>
-                        <Dialog>
-                            <DialogTrigger as-child> 
-                                <Button variant="outline">
-                                    <Eraser />
-                                </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                                <DialogTitle>
-                                    Deletion of product of ID {{ product.id }}
-                                </DialogTitle>
-                                Are you sure?
-                                <DialogFooter>
-                                    <DialogClose class="flex gap-3">
-                                        <Button variant="destructive" @click="onDelete(product.id)">Yes</Button>
-                                        <Button variant="outline">No</Button>
-                                    </DialogClose>
-                                </DialogFooter>
-                            </DialogContent>
-                        </Dialog>
-                    </TableCell>
-                </TableRow>
-            </TableBody>
-        </Table>
-        
-        <ScrollBar orientation="horizontal"/>
-    </ScrollArea>
+                                </DialogContent>
+                            </Dialog>
+                        </TableCell>
+                    </TableRow>
+                </TableBody>
+            </Table>
+            
+            <ScrollBar orientation="horizontal"/>
+        </ScrollArea>
+    </div>
 </template>
