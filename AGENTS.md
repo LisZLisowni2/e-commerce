@@ -9,7 +9,7 @@ Full-stack e-commerce: **Laravel 12** backend + **Vue 3** frontend, deployed via
 ### Backend (Laravel 12, PHP 8.2+)
 ```bash
 cd backend
-composer test          # Run Pest tests (requires PostgreSQL)
+php artisan test       # Run Pest tests
 php artisan serve      # Local dev server
 ```
 
