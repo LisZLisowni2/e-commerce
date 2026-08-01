@@ -6,7 +6,6 @@ use App\Models\Product;
 use App\ScopeEnum;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
@@ -38,6 +37,7 @@ class ProductController extends Controller
             'vendor_id' => $this->isManager($request)
                 ? ['required', 'integer', Rule::exists('users', 'id')->where('scope', ScopeEnum::VENDOR->value)]
                 : ['prohibited'],
+            'category_id' => ['required', 'integer']
         ]);
 
         $data['vendor_id'] ??= $request->user()->id;
@@ -65,6 +65,7 @@ class ProductController extends Controller
             'vendor_id' => $this->isManager($request)
                 ? ['sometimes', 'integer', Rule::exists('users', 'id')->where('scope', ScopeEnum::VENDOR->value)]
                 : ['prohibited'],
+            'category_id' => ['sometimes', 'integer']
         ]);
 
         if (isset($data['image'])) {

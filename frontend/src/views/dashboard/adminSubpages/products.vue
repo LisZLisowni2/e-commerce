@@ -33,6 +33,7 @@ import { computed, ref } from "vue";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useCategoriesFlat } from "@/composables/useCategories";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5 MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
@@ -49,6 +50,7 @@ const productSchema = z.object({
             .optional(),
     last30DaysPrice: z.coerce.number().min(0).optional(),
     vendor_id: z.coerce.number().positive().optional(),
+    category_id: z.coerce.number().positive().optional(),
 })
 
 type productSchemaType = z.infer<typeof productSchema>
@@ -64,6 +66,7 @@ const addProductSchema = z.object({
             .refine((file) => ACCEPTED_IMAGE_TYPES.includes(file?.type), "Only .jpg, .jpeg, .png and .webp formats are supported."),
     last30DaysPrice: z.coerce.number({ message: "Number must be greater than 0" }).min(0).optional(),
     vendor_id: z.coerce.number({ message: "Please select a vendor" }).min(1, { message: "Please select a vendor" }),
+    category_id: z.coerce.number().min(1, { message: "Please select a category" }),
 })
 
 type addProductSchemaType = z.infer<typeof addProductSchema>
@@ -81,6 +84,7 @@ const [quantity, quantityAttrs] = defineField('quantity')
 const [image, imageAttrs] = defineField('image')
 const [last30DaysPrice, last30DaysPriceAttrs] = defineField('last30DaysPrice')
 const [vendorId, vendorIdAttrs] = defineField('vendor_id')
+const [categoryId, categoryIdAttrs] = defineField('category_id')
 
 const addForm = useForm<addProductSchemaType>({
     validationSchema: toTypedSchema(addProductSchema)
@@ -95,8 +99,12 @@ const [addQuantity, addQuantityAttrs] = addForm.defineField('quantity')
 const [addImage, addImageAttrs] = addForm.defineField('image')
 const [addLast30DaysPrice, addLast30DaysPriceAttrs] = addForm.defineField('last30DaysPrice')
 const [addVendorId, addVendorIdAttrs] = addForm.defineField('vendor_id')
+const [addCategoryId, addCategoryIdAttrs] = addForm.defineField('category_id')
 
 const queryClient = useQueryClient()
+
+const editGlobalMessage = ref("")
+const addGlobalMessage = ref("")
 
 const { mutate: updateMutation } = useMutation({
     mutationFn: async (credentials: productSchemaType & {
@@ -112,6 +120,7 @@ const { mutate: updateMutation } = useMutation({
             if (credentials.quantity !== undefined) formData.append('quantity', String(credentials.quantity))
             if (credentials.last30DaysPrice !== undefined) formData.append('last30DaysPrice', String(credentials.last30DaysPrice))
             if (credentials.vendor_id !== undefined) formData.append('vendor_id', String(credentials.vendor_id))
+            if (credentials.category_id !== undefined) formData.append('category_id', String(credentials.category_id))
     
             // Laravel needs method spoofing for PUT + multipart form data
             formData.append('_method', 'PUT')
@@ -125,6 +134,7 @@ const { mutate: updateMutation } = useMutation({
     },
     onSuccess: () => {
         queryClient.invalidateQueries()
+        editGlobalMessage.value = "Update successful"
     }
 })
 
@@ -147,6 +157,7 @@ const { mutate: createMutation } = useMutation({
         formData.append('quantity', String(credentials.quantity))
         formData.append('image', credentials.image) // actual File object
         formData.append('vendor_id', String(credentials.vendor_id))
+        formData.append('category_id', String(credentials.category_id))
 
         if (credentials.last30DaysPrice !== undefined) {
             formData.append('last30DaysPrice', String(credentials.last30DaysPrice))
@@ -156,12 +167,14 @@ const { mutate: createMutation } = useMutation({
     },
     onSuccess: () => {
         queryClient.invalidateQueries()
+        addGlobalMessage.value = "Addition successful"
     }
 })
 
 const selectedProduct = ref<number>(-1)
 
 const onSubmit = handleSubmit((values) => {
+    editGlobalMessage.value = ""
     if (selectedProduct.value < 0) return;
 
     updateMutation({
@@ -171,6 +184,8 @@ const onSubmit = handleSubmit((values) => {
 })
 
 const onAddSubmit = addForm.handleSubmit((values) => {
+    addGlobalMessage.value = ""
+
     createMutation(values)
 })
 
@@ -180,6 +195,7 @@ const onDelete = (productID: number) => {
 
 const { data, isLoading } = useProducts();
 const { data: usersData } = useUsers();
+const { data: categoryData } = useCategoriesFlat();
 
 const vendors = computed(() => {
     return (usersData.value?.users ?? []).filter((user: User) => user.scope === "vendor")
@@ -338,8 +354,30 @@ function handleFileChanges(event: Event) {
                                 {{ addErrors.vendor_id }}
                             </span>
                         </FormField>
+                        <FormField>
+                            <Label for="add-category">Category</Label>
+                            <Select v-model="addCategoryId" v-bind="addCategoryIdAttrs">
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select a category" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem v-for="category in categoryData?.categories" :key="category.id" :value="String(category.id)">
+                                        {{ category.name }}
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <span
+                                class="text-red-500"
+                                v-if="addErrors.category_id"
+                            >
+                                {{ addErrors.category_id }}
+                            </span>
+                        </FormField>
                         <DialogFooter>
-                            <Button>Add</Button>
+                            <div class="flex flex-col gap-3">
+                                <Button>Add</Button>
+                                <span class="text-green-500">{{ addGlobalMessage }}</span>
+                            </div>
                         </DialogFooter>
                     </form>
                 </DialogContent>
@@ -358,6 +396,8 @@ function handleFileChanges(event: Event) {
                         <TableHead>Quantity</TableHead>
                         <TableHead>Image URL</TableHead>
                         <TableHead>Last 30 Days Price</TableHead>
+                        <TableHead>Vendor ID</TableHead>
+                        <TableHead>Category ID</TableHead>
                         <TableHead>Created at</TableHead>
                         <TableHead>Updated at</TableHead>
                         <TableHead></TableHead>
@@ -374,6 +414,8 @@ function handleFileChanges(event: Event) {
                         <TableCell>{{ product.quantity }}</TableCell>
                         <TableCell>{{ product.imageURL }}</TableCell>
                         <TableCell>{{ product.last30DaysPrice }}</TableCell>
+                        <TableCell>{{ product.vendor_id }}</TableCell>
+                        <TableCell>{{ product.category_id }}</TableCell>
                         <TableCell>{{ product.created_at }}</TableCell>
                         <TableCell>{{ product.updated_at }}</TableCell>
                         <TableCell>
@@ -503,8 +545,30 @@ function handleFileChanges(event: Event) {
                                                 {{ errors.vendor_id }}
                                             </span>
                                         </FormField>
+                                        <FormField>
+                                            <Label for="category">Category</Label>
+                                            <Select v-model="categoryId" v-bind="categoryIdAttrs" :default-value="String(product.category_id)">
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select a category" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem v-for="category in categoryData?.categories" :key="category.id" :value="String(category.id)">
+                                                        {{ category.name }}
+                                                    </SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                            <span
+                                                class="text-red-500"
+                                                v-if="errors.category_id"
+                                            >
+                                                {{ errors.category_id }}
+                                            </span>
+                                        </FormField>
                                         <DialogFooter>
-                                            <Button>Edit</Button>
+                                            <div class="flex flex-col gap-3">
+                                                <Button>Edit</Button>
+                                                <span class="text-green-500">{{ editGlobalMessage }}</span>
+                                            </div>
                                         </DialogFooter>
                                     </form>
                                 </DialogContent>

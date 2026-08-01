@@ -31,6 +31,8 @@ import { computed, ref } from "vue";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { useAuthStore } from "@/stores/useAuthStore";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useCategories, useCategoriesFlat } from "@/composables/useCategories";
 
 const authStore = useAuthStore();
 
@@ -48,6 +50,7 @@ const productSchema = z.object({
             .refine((file) => ACCEPTED_IMAGE_TYPES.includes(file?.type), "Only .jpg, .jpeg, .png and .webp formats are supported.")
             .optional(),
     last30DaysPrice: z.coerce.number().min(0).optional(),
+    category_id: z.coerce.number().positive().optional(),
 })
 
 type productSchemaType = z.infer<typeof productSchema>
@@ -62,6 +65,7 @@ const addProductSchema = z.object({
             .refine((file) => file?.size <= MAX_FILE_SIZE, "Max image size if 5MB")
             .refine((file) => ACCEPTED_IMAGE_TYPES.includes(file?.type), "Only .jpg, .jpeg, .png and .webp formats are supported."),
     last30DaysPrice: z.coerce.number({ message: "Number must be greater than 0" }).min(0).optional(),
+    category_id: z.coerce.number().min(1, { message: "Category is required" }),
 })
 
 type addProductSchemaType = z.infer<typeof addProductSchema>
@@ -78,6 +82,7 @@ const [price, priceAttrs] = defineField('price')
 const [quantity, quantityAttrs] = defineField('quantity')
 const [image, imageAttrs] = defineField('image')
 const [last30DaysPrice, last30DaysPriceAttrs] = defineField('last30DaysPrice')
+const [categoryId, categoryIdAttrs] = defineField('category_id')
 
 const addForm = useForm<addProductSchemaType>({
     validationSchema: toTypedSchema(addProductSchema)
@@ -91,6 +96,7 @@ const [addPrice, addPriceAttrs] = addForm.defineField('price')
 const [addQuantity, addQuantityAttrs] = addForm.defineField('quantity')
 const [addImage, addImageAttrs] = addForm.defineField('image')
 const [addLast30DaysPrice, addLast30DaysPriceAttrs] = addForm.defineField('last30DaysPrice')
+const [addCategoryId, addCategoryIdAttrs] = addForm.defineField('category_id')
 
 const queryClient = useQueryClient()
 
@@ -107,6 +113,7 @@ const { mutate: updateMutation } = useMutation({
             if (credentials.price !== undefined) formData.append('price', String(credentials.price))
             if (credentials.quantity !== undefined) formData.append('quantity', String(credentials.quantity))
             if (credentials.last30DaysPrice !== undefined) formData.append('last30DaysPrice', String(credentials.last30DaysPrice))
+            if (credentials.category_id !== undefined) formData.append('category_id', String(credentials.category_id))
     
             // Laravel needs method spoofing for PUT + multipart form data
             formData.append('_method', 'PUT')
@@ -141,6 +148,7 @@ const { mutate: createMutation } = useMutation({
         formData.append('price', String(credentials.price))
         formData.append('quantity', String(credentials.quantity))
         formData.append('image', credentials.image) // actual File object
+        formData.append('category_id', String(credentials.category_id))
 
         if (credentials.last30DaysPrice !== undefined) {
             formData.append('last30DaysPrice', String(credentials.last30DaysPrice))
@@ -173,6 +181,7 @@ const onDelete = (productID: number) => {
 }
 
 const { data, isLoading } = useProducts(authStore.user?.id);
+const { data: categoryData } = useCategoriesFlat();
 
 const filterInput = ref("")
 
@@ -308,6 +317,25 @@ function handleFileChanges(event: Event) {
                                 {{ addErrors.last30DaysPrice }}
                             </span>
                         </FormField>
+                        <FormField>
+                            <Label for="add-category">Category</Label>
+                            <Select v-model="addCategoryId" v-bind="addCategoryIdAttrs">
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select a category" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem v-for="category in categoryData?.categories" :key="category.id" :value="String(category.id)">
+                                        {{ category.name }}
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <span
+                                class="text-red-500"
+                                v-if="addErrors.category_id"
+                            >
+                                {{ addErrors.category_id }}
+                            </span>
+                        </FormField>
                         <DialogFooter>
                             <Button>Add</Button>
                         </DialogFooter>
@@ -327,6 +355,7 @@ function handleFileChanges(event: Event) {
                         <TableHead>Quantity</TableHead>
                         <TableHead>Image URL</TableHead>
                         <TableHead>Last 30 Days Price</TableHead>
+                        <TableHead>Category ID</TableHead>
                         <TableHead>Created at</TableHead>
                         <TableHead>Updated at</TableHead>
                         <TableHead></TableHead>
@@ -342,6 +371,7 @@ function handleFileChanges(event: Event) {
                         <TableCell>{{ product.quantity }}</TableCell>
                         <TableCell>{{ product.imageURL }}</TableCell>
                         <TableCell>{{ product.last30DaysPrice }}</TableCell>
+                        <TableCell>{{ product.category_id }}</TableCell>
                         <TableCell>{{ product.created_at }}</TableCell>
                         <TableCell>{{ product.updated_at }}</TableCell>
                         <TableCell>
@@ -450,6 +480,25 @@ function handleFileChanges(event: Event) {
                                                 v-if="errors.last30DaysPrice"
                                             >
                                                 {{ errors.last30DaysPrice }}
+                                            </span>
+                                        </FormField>
+                                        <FormField>
+                                            <Label for="category">Category</Label>
+                                            <Select v-model="categoryId" v-bind="categoryIdAttrs" :default-value="String(product.category_id)">
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select a category" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem v-for="category in categoryData?.categories" :key="category.id" :value="String(category.id)">
+                                                        {{ category.name }}
+                                                    </SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                            <span
+                                                class="text-red-500"
+                                                v-if="errors.category_id"
+                                            >
+                                                {{ errors.category_id }}
                                             </span>
                                         </FormField>
                                         <DialogFooter>

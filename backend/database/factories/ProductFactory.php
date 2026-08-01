@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Category;
 use App\Models\User;
 use App\ScopeEnum;
 use Illuminate\Database\Eloquent\Attributes\Scope;
@@ -30,7 +31,8 @@ class ProductFactory extends Factory
             'quantity' => fake()->numberBetween(10, 200),
             'vendor_id' => User::factory([
                 'scope' => ScopeEnum::VENDOR->value,
-            ])
+            ]),
+            'category_id' => Category::factory(),
         ];
     }
 }

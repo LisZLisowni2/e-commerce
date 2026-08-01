@@ -4,6 +4,7 @@ use App\Http\Controllers\AddressController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\CategoryController;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
@@ -25,6 +26,8 @@ Route::get('/image/{path}', function ($path) {
 
 Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/{product}', [ProductController::class, 'show']);
+Route::get('/categories', [CategoryController::class, 'index']);
+Route::get('/categories/{category}', [CategoryController::class, 'show']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -34,6 +37,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/user/personal', [AuthController::class, 'updatePersonal']);
 
     Route::apiResource('addresses', AddressController::class);
+
+    Route::middleware('scope:admin,superadmin')->group(function () {
+        Route::post("/categories", [CategoryController::class, 'store']);
+        Route::put("/categories/{category}", [CategoryController::class, 'update']);
+        Route::delete("/categories/{category}", [CategoryController::class, 'destroy']);
+    });
 
     Route::middleware('scope:admin,vendor,superadmin')->group(function () {
         Route::post('/products', [ProductController::class, 'store']);

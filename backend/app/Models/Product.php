@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Casts\PriceCast;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Product extends Model
 {
@@ -21,7 +22,8 @@ class Product extends Model
         'imageURL',
         'last30DaysPrice',
         'quantity',
-        'vendor_id'
+        'vendor_id',
+        'category_id'
     ];
 
     protected $casts = [
@@ -31,4 +33,8 @@ class Product extends Model
         "imageURL" => "string",
         "last30DaysPrice" => PriceCast::class,
     ];
+
+    public function category(): BelongsTo {
+        return $this->belongsTo(Category::class, 'category_id');
+    }
 }

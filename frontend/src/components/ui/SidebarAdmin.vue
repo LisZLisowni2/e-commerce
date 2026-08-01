@@ -8,7 +8,7 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { Bell, Box, HomeIcon, Table, UserIcon, UserPen } from "@lucide/vue";
+import { Box, Folder, HomeIcon, Table, UserIcon, UserPen } from "@lucide/vue";
 import SidebarFooter from "./sidebar/SidebarFooter.vue";
 import SidebarContent from "./sidebar/SidebarContent.vue";
 
@@ -29,9 +29,9 @@ const items = [
         icon: Box,
     },
     {
-        title: "Notifications",
-        url: "/admin/dashboard/notifications",
-        icon: Bell,
+        title: "Categories",
+        url: "/admin/dashboard/categories",
+        icon: Folder,
     },
 ];
 

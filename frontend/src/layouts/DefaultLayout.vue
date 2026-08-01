@@ -14,10 +14,9 @@ import {
     NavigationMenuLink,
     NavigationMenuList,
     NavigationMenuTrigger,
+    navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
-import {
-    DropdownMenuItem,
-} from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import IconDropdown from "@/components/navigation/IconDropdown.vue";
 import {
     Search,
@@ -46,171 +45,124 @@ import api from "@/api.ts";
 import { useAuthStore } from "@/stores/useAuthStore.ts";
 import router from "@/router/router.ts";
 import FormField from "@/components/ui/FormField.vue";
+import { useCategories } from "@/composables/useCategories";
+import type { Category } from "@/types/Category";
+import type { NavItem } from "@/types/NavItem";
+import NavSubMenu from "@/components/navigation/NavSubMenu.vue";
 
-const authStore = useAuthStore()
+const authStore = useAuthStore();
 
 onMounted(async () => {
-    const { error } = useUser()
+    const { error } = useUser();
 
     if (error.value) {
-        authStore.logout()
+        authStore.logout();
     }
-})
+});
 
+const { data } = useCategories();
 const themeStore = useThemeStore();
 
-const navElements = computed(() => [
-    {
-        index: 0,
-        name: "Laptop",
-        link: "/laptop",
-        subnames: [
-            {
-                index: 1,
-                name: "Mac",
-                link: "/laptop/mac",
-            },
-            {
-                index: 2,
-                name: "Gaming",
-                link: "/laptop/gaming",
-            },
-            {
-                index: 3,
-                name: "Ultrabook",
-                link: "/laptop/ultrabook",
-            },
-        ],
-    },
-    {
-        index: 4,
-        name: "Desktop",
-        link: "/desktop",
-        subnames: [
-            {
-                index: 5,
-                name: "Gaming",
-                link: "/desktop/gaming",
-            },
-            {
-                index: 6,
-                name: "Ready for AI",
-                link: "/desktop/ai",
-            },
-            {
-                index: 7,
-                name: "Workstation",
-                link: "/desktop/workstation",
-            },
-        ],
-    },
-    {
-        index: 8,
-        name: "Peripherials",
-        link: "/peripheral",
-        subnames: [
-            {
-                index: 9,
-                name: "Mouse",
-                link: "/peripheral/mouse",
-            },
-            {
-                index: 10,
-                name: "Keyboard",
-                link: "/peripheral/keyboard",
-            },
-            {
-                index: 11,
-                name: "Headset",
-                link: "/peripheral/headset",
-            },
-        ],
-    },
-    {
-        index: 12,
-        name: "Server",
-        link: "/server",
-        subnames: [
-            {
-                index: 13,
-                name: "Home lab",
-                link: "/server/home",
-            },
-            {
-                index: 14,
-                name: "Business",
-                link: "/server/businnes",
-            },
-        ],
-    },
-]);
+function extractSubcategories(categories: Category[]): NavItem[] {
+    return categories.map((category) => {
+        if (category.children_recursive.length > 0) {
+            return {
+                index: category.id,
+                name: category.name,
+                link: `/${category.slug}`,
+                subnames: extractSubcategories(category.children_recursive),
+            };
+        } else {
+            return {
+                index: category.id,
+                name: category.name,
+                link: `/${category.slug}`,
+                subnames: [],
+            };
+        }
+    });
+}
+
+const navElements = computed(() => {
+    if (!data.value) return [];
+
+    const nav = extractSubcategories(data.value.categories);
+    console.log(nav)
+    return nav
+});
 
 const loginForm = z.object({
-    email: z.string()
+    email: z
+        .string()
         .min(1, { message: "Email address is required" })
         .email("Must be a valid email address"),
-    password: z.string()
-        .min(8, { message: "Password must be at least 8 characters" })
-})
+    password: z
+        .string()
+        .min(8, { message: "Password must be at least 8 characters" }),
+});
 
-type loginFormValue = z.infer<typeof loginForm>
+type loginFormValue = z.infer<typeof loginForm>;
 
 const { handleSubmit, errors } = useForm<loginFormValue>({
-    validationSchema: toTypedSchema(loginForm)
-})
+    validationSchema: toTypedSchema(loginForm),
+});
 
 const queryClient = useQueryClient();
-const { value: email } = useField<string>("email")
-const { value: password } = useField<string>("password")
+const { value: email } = useField<string>("email");
+const { value: password } = useField<string>("password");
 
-const { refetch: fetchUserProfile } = useUser()
+const { refetch: fetchUserProfile } = useUser();
 
 const { mutate, isPending, isError, error } = useMutation({
     mutationFn: async (credentials: loginFormValue) => {
-        const { data } = await api.post("/login", credentials)
-        return data
+        const { data } = await api.post("/login", credentials);
+        return data;
     },
-    mutationKey: ['user'],
+    mutationKey: ["user"],
     onSuccess: async (res) => {
-        authStore.setToken(res.token)
-        queryClient.invalidateQueries()
-        await fetchUserProfile()
+        authStore.setToken(res.token);
+        queryClient.invalidateQueries();
+        await fetchUserProfile();
     },
     onError: () => {
-        console.error(`Authentication failed. Email or password wrong`)
-    }
-})
+        console.error(`Authentication failed. Email or password wrong`);
+    },
+});
 
 const onSubmit = handleSubmit((data) => {
-    mutate({ email: data.email, password: data.password })
-})
+    mutate({ email: data.email, password: data.password });
+});
 
 const { mutate: logoutMutate } = useMutation({
     mutationFn: async () => {
-        const { data } = await api.post("/logout")
-        return data
+        const { data } = await api.post("/logout");
+        return data;
     },
-    mutationKey: ['user'],
+    mutationKey: ["user"],
     onSuccess: async () => {
-        authStore.logout()
+        authStore.logout();
 
-        router.push("/")
+        router.push("/");
         // window.location.reload()
     },
     onError: () => {
-        console.error(`Logout failed. Server error probably`)
-    }
-})
+        console.error(`Logout failed. Server error probably`);
+    },
+});
 
 const onLogoutSubmit = () => {
-    logoutMutate()
-}
+    logoutMutate();
+};
 </script>
 
 <template>
     <header class="flex max-md:flex-col items-center w-full gap-4 px-4 py-2">
         <div class="flex flex-row max-md:flex-col items-center gap-4 shrink-0">
-            <RouterLink to="/"><h1 class="text-xl sm:text-3xl text-amber-500">E-commerce</h1></RouterLink>
+            <RouterLink to="/"
+                ><h1 class="text-xl sm:text-3xl text-amber-500">
+                    E-commerce
+                </h1></RouterLink
+            >
             <Button
                 @click="
                     themeStore.mode === 'light'
@@ -267,7 +219,11 @@ const onLogoutSubmit = () => {
                                                 name="email"
                                                 type="email"
                                             />
-                                            <span class="text-red-500" v-if="errors.email">{{ errors.email }}</span>
+                                            <span
+                                                class="text-red-500"
+                                                v-if="errors.email"
+                                                >{{ errors.email }}</span
+                                            >
                                         </FormField>
                                         <FormField>
                                             <Label for="password-1"
@@ -279,15 +235,31 @@ const onLogoutSubmit = () => {
                                                 name="password"
                                                 type="password"
                                             />
-                                            <span class="text-red-500" v-if="errors.password">{{ errors.password }}</span>
-                                            <span class="text-red-500" v-if="isError">{{ error }}</span>
+                                            <span
+                                                class="text-red-500"
+                                                v-if="errors.password"
+                                                >{{ errors.password }}</span
+                                            >
+                                            <span
+                                                class="text-red-500"
+                                                v-if="isError"
+                                                >{{ error }}</span
+                                            >
                                         </FormField>
                                     </div>
                                     <DialogFooter>
-                                        <Button type="submit" v-if="!isPending">Login</Button>
-                                        <Button v-else variant="ghost">Login</Button>
+                                        <Button type="submit" v-if="!isPending"
+                                            >Login</Button
+                                        >
+                                        <Button v-else variant="ghost"
+                                            >Login</Button
+                                        >
                                         <DialogClose as-child>
-                                            <RouterLink to="/register"><Button variant="outline">Register</Button></RouterLink>
+                                            <RouterLink to="/register"
+                                                ><Button variant="outline"
+                                                    >Register</Button
+                                                ></RouterLink
+                                            >
                                         </DialogClose>
                                     </DialogFooter>
                                 </form>
@@ -296,7 +268,7 @@ const onLogoutSubmit = () => {
                     </DropdownMenuItem>
                     <DropdownMenuItem @select.prevent>
                         <RouterLink to="/register">
-                                <span class="w-full cursor-pointer">Register</span>
+                            <span class="w-full cursor-pointer">Register</span>
                         </RouterLink>
                     </DropdownMenuItem>
                 </template>
@@ -306,25 +278,51 @@ const onLogoutSubmit = () => {
                             <span class="w-full cursor-pointer">Profile</span>
                         </RouterLink>
                     </DropdownMenuItem>
-                    <DropdownMenuItem v-if="authStore.user?.scope === 'admin' || authStore.user?.scope === 'superadmin'" @select.prevent>
+                    <DropdownMenuItem
+                        v-if="
+                            authStore.user?.scope === 'admin' ||
+                            authStore.user?.scope === 'superadmin'
+                        "
+                        @select.prevent
+                    >
                         <RouterLink to="/admin/dashboard">
-                            <span class="w-full cursor-pointer">Admin Dashboard</span>
+                            <span class="w-full cursor-pointer"
+                                >Admin Dashboard</span
+                            >
                         </RouterLink>
                     </DropdownMenuItem>
-                    <DropdownMenuItem v-if="authStore.user?.scope === 'support' || authStore.user?.scope === 'superadmin'" @select.prevent>
+                    <DropdownMenuItem
+                        v-if="
+                            authStore.user?.scope === 'support' ||
+                            authStore.user?.scope === 'superadmin'
+                        "
+                        @select.prevent
+                    >
                         <RouterLink to="/support/dashboard">
-                            <span class="w-full cursor-pointer">Support Dashboard</span>
+                            <span class="w-full cursor-pointer"
+                                >Support Dashboard</span
+                            >
                         </RouterLink>
                     </DropdownMenuItem>
-                    <DropdownMenuItem v-if="authStore.user?.scope === 'vendor' || authStore.user?.scope === 'superadmin'" @select.prevent>
+                    <DropdownMenuItem
+                        v-if="
+                            authStore.user?.scope === 'vendor' ||
+                            authStore.user?.scope === 'superadmin'
+                        "
+                        @select.prevent
+                    >
                         <RouterLink to="/vendor/dashboard">
-                            <span class="w-full cursor-pointer">Vendor Dashboard</span>
+                            <span class="w-full cursor-pointer"
+                                >Vendor Dashboard</span
+                            >
                         </RouterLink>
                     </DropdownMenuItem>
                     <DropdownMenuItem @select.prevent>
                         <Dialog>
                             <DialogTrigger as-child>
-                                <span class="w-full cursor-pointer">Logout</span>
+                                <span class="w-full cursor-pointer"
+                                    >Logout</span
+                                >
                             </DialogTrigger>
                             <DialogContent>
                                 <DialogHeader>
@@ -334,7 +332,9 @@ const onLogoutSubmit = () => {
                                     <h1>Are you sure?</h1>
                                     <DialogFooter>
                                         <Button type="submit">Yes</Button>
-                                        <Button type="clear" variant="ghost">No</Button>
+                                        <Button type="clear" variant="ghost"
+                                            >No</Button
+                                        >
                                     </DialogFooter>
                                 </form>
                             </DialogContent>
@@ -363,20 +363,28 @@ const onLogoutSubmit = () => {
                     v-for="item in navElements"
                     :key="item.index"
                 >
-                    <NavigationMenuTrigger>
-                        <Button variant="ghost">{{ item.name }}</Button>
-                    </NavigationMenuTrigger>
-                    <NavigationMenuContent>
-                        <ul
-                            class="w-50"
-                            v-for="subitem in item.subnames"
-                            :key="subitem.index"
-                        >
-                            <NavigationMenuLink>
-                                {{ subitem.name }}
-                            </NavigationMenuLink>
-                        </ul>
-                    </NavigationMenuContent>
+                    <!-- If item has subnames, render Trigger + Content panel -->
+                    <template v-if="item.subnames && item.subnames.length > 0">
+                        <NavigationMenuTrigger>
+                            {{ item.name }}
+                        </NavigationMenuTrigger>
+
+                        <NavigationMenuContent>
+                            <!-- Render recursive component inside content viewport -->
+                            <div class="w-56 p-3">
+                                <NavSubMenu :items="item.subnames" />
+                            </div>
+                        </NavigationMenuContent>
+                    </template>
+
+                    <!-- Top-level leaf link (no subitems) -->
+                    <NavigationMenuLink
+                        v-else
+                        :href="item.link || '#'"
+                        :class="navigationMenuTriggerStyle()"
+                    >
+                        {{ item.name }}
+                    </NavigationMenuLink>
                 </NavigationMenuItem>
             </NavigationMenuList>
         </NavigationMenu>

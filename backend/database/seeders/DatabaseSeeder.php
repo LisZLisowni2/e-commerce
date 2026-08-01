@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Address;
+use App\Models\Category;
 use App\Models\Product;
 use App\Models\User;
 use App\ScopeEnum;
@@ -26,8 +27,14 @@ class DatabaseSeeder extends Seeder
             "scope" => ScopeEnum::VENDOR->value,
         ]);
 
+        $mainCategories = Category::factory(5)->create();
+        $subCategories = Category::factory(15)->create([
+            'parent_id' => $mainCategories->random()->id
+        ]);
+
         Product::factory(30)->create([
             "vendor_id" => fn () => $vendors->random()->id,
+            "category_id" => fn () => $subCategories->random()->id,
         ]);
 
         $allUsers = User::all();

@@ -38,8 +38,8 @@ const routes: RouteRecordRaw[] = [
                 component: () => import("@/views/dashboard/adminSubpages/products.vue")
             },
             {
-                path: "notifications",
-                component: () => import("@/views/dashboard/adminDashboard.vue")
+                path: "categories",
+                component: () => import("@/views/dashboard/adminSubpages/categories.vue")
             },
         ]
     },
