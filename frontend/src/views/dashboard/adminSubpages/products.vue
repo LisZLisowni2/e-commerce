@@ -66,7 +66,7 @@ const addProductSchema = z.object({
             .refine((file) => ACCEPTED_IMAGE_TYPES.includes(file?.type), "Only .jpg, .jpeg, .png and .webp formats are supported."),
     last30DaysPrice: z.coerce.number({ message: "Number must be greater than 0" }).min(0).optional(),
     vendor_id: z.coerce.number({ message: "Please select a vendor" }).min(1, { message: "Please select a vendor" }),
-    category_id: z.coerce.number().min(1, { message: "Please select a category" }),
+    category_id: z.coerce.number({ message: "Please select a category" }).min(1, { message: "Please select a category" }),
 })
 
 type addProductSchemaType = z.infer<typeof addProductSchema>

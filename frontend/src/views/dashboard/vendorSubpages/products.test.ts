@@ -3,7 +3,9 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { ref } from "vue";
 import products from "@/views/dashboard/vendorSubpages/products.vue";
 import { useProducts } from "@/composables/useProducts";
+import { useCategoriesFlat } from "@/composables/useCategories";
 import type { Product } from "@/types/Product";
+import type { CategoryFlat } from "@/types/Category";
 
 const mockMutate = vi.fn();
 
@@ -28,6 +30,11 @@ vi.mock("@/composables/useProducts", () => ({
     useProducts: vi.fn(),
 }));
 
+vi.mock("@/composables/useCategories", () => ({
+    useCategories: vi.fn(),
+    useCategoriesFlat: vi.fn(),
+}));
+
 vi.mock("@/stores/useAuthStore", () => ({
     useAuthStore: vi.fn(() => ({
         user: { id: 1, scope: "vendor" },
@@ -38,6 +45,7 @@ const mockProducts: Product[] = [
     {
         id: 1,
         vendor_id: 1,
+        category_id: 1,
         name: "RTX 5070",
         description: "Graphics card",
         price: 3299.99,
@@ -50,6 +58,7 @@ const mockProducts: Product[] = [
     {
         id: 2,
         vendor_id: 1,
+        category_id: 2,
         name: "MacBook Pro",
         description: "Laptop",
         price: 12999.99,
@@ -61,10 +70,31 @@ const mockProducts: Product[] = [
     },
 ];
 
+const mockCategories: CategoryFlat[] = [
+    {
+        id: 1,
+        name: "Laptops",
+        slug: "laptops",
+        parent_id: undefined,
+    },
+    {
+        id: 2,
+        name: "Gaming Laptops",
+        slug: "gaming-laptops",
+        parent_id: 1,
+    },
+];
+
 const mountProducts = (data: Product[] | undefined = undefined, isLoading = false) => {
     vi.mocked(useProducts).mockReturnValue({
         data: ref(data),
         isLoading: ref(isLoading),
+        error: null,
+    } as any);
+
+    vi.mocked(useCategoriesFlat).mockReturnValue({
+        data: ref({ categories: mockCategories }),
+        isLoading: ref(false),
         error: null,
     } as any);
 
@@ -127,6 +157,7 @@ describe("vendor products.vue", () => {
         expect(wrapper.text()).toContain("A list of products");
         expect(wrapper.text()).toContain("ID");
         expect(wrapper.text()).not.toContain("Vendor ID");
+        expect(wrapper.text()).toContain("Category ID");
         expect(wrapper.text()).toContain("Name");
         expect(wrapper.text()).toContain("Description");
         expect(wrapper.text()).toContain("Price");
@@ -225,6 +256,7 @@ describe("vendor products.vue", () => {
         (wrapper.vm as any).addPrice = "499.99";
         (wrapper.vm as any).addQuantity = "10";
         (wrapper.vm as any).addImage = createImageFile();
+        (wrapper.vm as any).addCategoryId = "1";
         submitDialogForm();
         await flush();
 
@@ -236,11 +268,28 @@ describe("vendor products.vue", () => {
                 price: 499.99,
                 quantity: 10,
                 image: expect.any(File),
+                category_id: 1,
             }),
         );
         expect(mockMutate).toHaveBeenCalledWith(
             expect.not.objectContaining({ vendor_id: expect.anything() }),
         );
+    });
+
+    it("does not submit when no category is selected", async () => {
+        const wrapper = mountProducts(mockProducts);
+        const content = await openDialog(wrapper, 0);
+
+        (wrapper.vm as any).addName = "New GPU";
+        (wrapper.vm as any).addDescription = "A new graphics card";
+        (wrapper.vm as any).addPrice = "499.99";
+        (wrapper.vm as any).addQuantity = "10";
+        (wrapper.vm as any).addImage = createImageFile();
+        submitDialogForm();
+        await flush();
+
+        expect(mockMutate).not.toHaveBeenCalled();
+        expect(content!.textContent).toContain("Category is required");
     });
 
     it("does not submit when required add fields are missing", async () => {

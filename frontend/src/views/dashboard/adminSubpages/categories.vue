@@ -40,14 +40,14 @@ const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/web
 
 const categorySchema = z.object({
     name: z.string().optional(),
-    parent_id: z.coerce.number().positive().optional(),
+    parent_id: z.coerce.number().positive().nullable().optional(),
 })
 
 type categorySchemaType = z.infer<typeof categorySchema>
 
 const addCategorySchema = z.object({
-    name: z.string().min(1, { message: "Name is required" }),
-    parent_id: z.coerce.number().positive().nullable(),
+    name: z.string({ message: "Name is required" }).min(1, { message: "Name is required" }),
+    parent_id: z.coerce.number().positive().nullable().optional(),
 })
 
 type addCategoryType = z.infer<typeof addCategorySchema>

@@ -4,8 +4,10 @@ import { ref } from "vue";
 import products from "@/views/dashboard/adminSubpages/products.vue";
 import { useProducts } from "@/composables/useProducts";
 import { useUsers } from "@/composables/useUsers";
+import { useCategoriesFlat } from "@/composables/useCategories";
 import type { Product } from "@/types/Product";
 import type { User } from "@/types/User";
+import type { CategoryFlat } from "@/types/Category";
 
 const elementProto = Element.prototype as any;
 if (!elementProto.hasPointerCapture) {
@@ -41,10 +43,16 @@ vi.mock("@/composables/useUsers", () => ({
     useUsers: vi.fn(),
 }));
 
+vi.mock("@/composables/useCategories", () => ({
+    useCategories: vi.fn(),
+    useCategoriesFlat: vi.fn(),
+}));
+
 const mockProducts: Product[] = [
     {
         id: 1,
         vendor_id: 1,
+        category_id: 1,
         name: "RTX 5070",
         description: "Graphics card",
         price: 3299.99,
@@ -57,6 +65,7 @@ const mockProducts: Product[] = [
     {
         id: 2,
         vendor_id: 2,
+        category_id: 2,
         name: "MacBook Pro",
         description: "Laptop",
         price: 12999.99,
@@ -65,6 +74,21 @@ const mockProducts: Product[] = [
         quantity: 2,
         created_at: "2026-01-01",
         updated_at: "2026-01-02",
+    },
+];
+
+const mockCategories: CategoryFlat[] = [
+    {
+        id: 1,
+        name: "Laptops",
+        slug: "laptops",
+        parent_id: undefined,
+    },
+    {
+        id: 2,
+        name: "Gaming Laptops",
+        slug: "gaming-laptops",
+        parent_id: 1,
     },
 ];
 
@@ -94,6 +118,12 @@ const mountProducts = (data: Product[] | undefined = undefined, isLoading = fals
 
     vi.mocked(useUsers).mockReturnValue({
         data: ref({ users: mockVendors }),
+        isLoading: ref(false),
+        error: null,
+    } as any);
+
+    vi.mocked(useCategoriesFlat).mockReturnValue({
+        data: ref({ categories: mockCategories }),
         isLoading: ref(false),
         error: null,
     } as any);
@@ -175,6 +205,7 @@ describe("products.vue", () => {
         expect(wrapper.text()).toContain("A list of products");
         expect(wrapper.text()).toContain("ID");
         expect(wrapper.text()).toContain("Vendor ID");
+        expect(wrapper.text()).toContain("Category ID");
         expect(wrapper.text()).toContain("Name");
         expect(wrapper.text()).toContain("Description");
         expect(wrapper.text()).toContain("Price");
@@ -289,6 +320,7 @@ describe("products.vue", () => {
         (wrapper.vm as any).addQuantity = "10";
         (wrapper.vm as any).addImage = createImageFile();
         (wrapper.vm as any).addVendorId = "1";
+        (wrapper.vm as any).addCategoryId = "1";
         submitDialogForm();
         await flush();
 
@@ -301,6 +333,7 @@ describe("products.vue", () => {
                 quantity: 10,
                 image: expect.any(File),
                 vendor_id: 1,
+                category_id: 1,
             }),
         );
     });
@@ -351,6 +384,23 @@ describe("products.vue", () => {
         expect(content!.textContent).toContain("Please select a vendor");
     });
 
+    it("does not submit when no category is selected", async () => {
+        const wrapper = mountProducts(mockProducts);
+        const content = await openDialog(wrapper, 0);
+
+        (wrapper.vm as any).addName = "New GPU";
+        (wrapper.vm as any).addDescription = "A new graphics card";
+        (wrapper.vm as any).addPrice = "499.99";
+        (wrapper.vm as any).addQuantity = "10";
+        (wrapper.vm as any).addImage = createImageFile();
+        (wrapper.vm as any).addVendorId = "1";
+        submitDialogForm();
+        await flush();
+
+        expect(mockMutate).not.toHaveBeenCalled();
+        expect(content!.textContent).toContain("Please select a category");
+    });
+
     it("lists vendors in the add form dropdown", async () => {
         const wrapper = mountProducts(mockProducts);
         await openDialog(wrapper, 0);
@@ -361,6 +411,19 @@ describe("products.vue", () => {
         expect(selectContent).toBeTruthy();
         expect(selectContent!.textContent).toContain("vendor1@example.com");
         expect(selectContent!.textContent).toContain("vendor2@example.com");
+    });
+
+    it("lists categories in the add form dropdown", async () => {
+        const wrapper = mountProducts(mockProducts);
+        await openDialog(wrapper, 0);
+        const content = document.body.querySelector<HTMLElement>('[data-slot="dialog-content"]')!;
+        const triggers = content.querySelectorAll<HTMLElement>('[data-slot="select-trigger"]');
+        triggers[1].dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, button: 0, ctrlKey: false }));
+        await flush();
+        const selectContent = document.body.querySelector<HTMLElement>('[data-slot="select-content"]');
+        expect(selectContent).toBeTruthy();
+        expect(selectContent!.textContent).toContain("Laptops");
+        expect(selectContent!.textContent).toContain("Gaming Laptops");
     });
 
     it("does not submit when the image file is too large", async () => {

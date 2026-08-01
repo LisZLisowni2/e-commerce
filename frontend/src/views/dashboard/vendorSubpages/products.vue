@@ -65,7 +65,7 @@ const addProductSchema = z.object({
             .refine((file) => file?.size <= MAX_FILE_SIZE, "Max image size if 5MB")
             .refine((file) => ACCEPTED_IMAGE_TYPES.includes(file?.type), "Only .jpg, .jpeg, .png and .webp formats are supported."),
     last30DaysPrice: z.coerce.number({ message: "Number must be greater than 0" }).min(0).optional(),
-    category_id: z.coerce.number().min(1, { message: "Category is required" }),
+    category_id: z.coerce.number({ message: "Category is required" }).min(1, { message: "Category is required" }),
 })
 
 type addProductSchemaType = z.infer<typeof addProductSchema>

@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Category;
 use App\Models\Product;
 use App\Models\User;
 use App\ScopeEnum;
@@ -91,6 +92,8 @@ test('admin can create product with a vendor', function () {
         'scope' => ScopeEnum::VENDOR,
     ]);
 
+    $category = Category::factory()->create();
+
     $response = $this->actingAs($admin)->post('/api/products', [
         'name' => 'Test Product',
         'description' => 'Test Description',
@@ -99,6 +102,7 @@ test('admin can create product with a vendor', function () {
         'last30DaysPrice' => 34.99,
         'quantity' => 10,
         'vendor_id' => $vendor->id,
+        'category_id' => $category->id,
     ], ['Accept' => 'application/json']);
 
     $response->assertStatus(201);
@@ -119,6 +123,8 @@ test('admin can create product without last30DaysPrice', function () {
         'scope' => ScopeEnum::VENDOR,
     ]);
 
+    $category = Category::factory()->create();
+
     $response = $this->actingAs($admin)->post('/api/products', [
         'name' => 'Test Product',
         'description' => 'Test Description',
@@ -126,6 +132,7 @@ test('admin can create product without last30DaysPrice', function () {
         'image' => UploadedFile::fake()->image('image.png'),
         'quantity' => 10,
         'vendor_id' => $vendor->id,
+        'category_id' => $category->id,
     ], ['Accept' => 'application/json']);
 
     $response->assertStatus(201);
@@ -224,6 +231,8 @@ test('vendor can create product', function () {
         'scope' => ScopeEnum::VENDOR,
     ]);
 
+    $category = Category::factory()->create();
+
     $response = $this->actingAs($vendor)->post('/api/products', [
         'name' => 'Vendor Product',
         'description' => 'Vendor Description',
@@ -231,6 +240,7 @@ test('vendor can create product', function () {
         'image' => UploadedFile::fake()->image('vendor.png'),
         'last30DaysPrice' => 54.99,
         'quantity' => 10,
+        'category_id' => $category->id,
     ], ['Accept' => 'application/json']);
 
     $response->assertStatus(201);
@@ -334,6 +344,8 @@ test('superadmin can create product', function () {
         'scope' => ScopeEnum::VENDOR,
     ]);
 
+    $category = Category::factory()->create();
+
     $response = $this->actingAs($superadmin)->post('/api/products', [
         'name' => 'Superadmin Product',
         'description' => 'Superadmin Description',
@@ -342,6 +354,7 @@ test('superadmin can create product', function () {
         'last30DaysPrice' => 109.99,
         'quantity' => 10,
         'vendor_id' => $vendor->id,
+        'category_id' => $category->id,
     ], ['Accept' => 'application/json']);
 
     $response->assertStatus(201);
@@ -435,7 +448,7 @@ test('create product validation errors', function () {
     $response = $this->actingAs($admin)->post('/api/products', [], ['Accept' => 'application/json']);
 
     $response->assertStatus(422);
-    $response->assertJsonValidationErrors(['name', 'description', 'price', 'image', 'quantity', 'vendor_id']);
+    $response->assertJsonValidationErrors(['name', 'description', 'price', 'image', 'quantity', 'vendor_id', 'category_id']);
 });
 
 test('update product validation errors', function () {
