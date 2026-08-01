@@ -37,7 +37,7 @@ class ProductController extends Controller
             'vendor_id' => $this->isManager($request)
                 ? ['required', 'integer', Rule::exists('users', 'id')->where('scope', ScopeEnum::VENDOR->value)]
                 : ['prohibited'],
-            'category_id' => ['required', 'integer']
+            'category_id' => ['required', 'integer', Rule::exists('categories', 'id')]
         ]);
 
         $data['vendor_id'] ??= $request->user()->id;
@@ -65,7 +65,7 @@ class ProductController extends Controller
             'vendor_id' => $this->isManager($request)
                 ? ['sometimes', 'integer', Rule::exists('users', 'id')->where('scope', ScopeEnum::VENDOR->value)]
                 : ['prohibited'],
-            'category_id' => ['sometimes', 'integer']
+            'category_id' => ['sometimes', 'integer', Rule::exists('categories', 'id')]
         ]);
 
         if (isset($data['image'])) {

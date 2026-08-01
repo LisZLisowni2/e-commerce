@@ -178,6 +178,44 @@ test('admin cannot assign a product to a non-vendor user', function () {
     $response->assertJsonValidationErrors(['vendor_id']);
 });
 
+test('admin cannot assign a product to a non-existent category', function () {
+    $admin = User::factory()->create([
+        'scope' => ScopeEnum::ADMIN,
+    ]);
+
+    $vendor = User::factory()->create([
+        'scope' => ScopeEnum::VENDOR,
+    ]);
+
+    $response = $this->actingAs($admin)->post('/api/products', [
+        'name' => 'Test Product',
+        'description' => 'Test Description',
+        'price' => 29.99,
+        'image' => UploadedFile::fake()->image('image.png'),
+        'quantity' => 10,
+        'vendor_id' => $vendor->id,
+        'category_id' => 9999,
+    ], ['Accept' => 'application/json']);
+
+    $response->assertStatus(422);
+    $response->assertJsonValidationErrors(['category_id']);
+});
+
+test('admin cannot update a product to a non-existent category', function () {
+    $admin = User::factory()->create([
+        'scope' => ScopeEnum::ADMIN,
+    ]);
+
+    $product = Product::factory()->create();
+
+    $response = $this->actingAs($admin)->putJson("/api/products/{$product->id}", [
+        'category_id' => 9999,
+    ]);
+
+    $response->assertStatus(422);
+    $response->assertJsonValidationErrors(['category_id']);
+});
+
 test('admin can update product', function () {
     $admin = User::factory()->create([
         'scope' => ScopeEnum::ADMIN,
