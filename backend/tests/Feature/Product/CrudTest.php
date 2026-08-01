@@ -81,7 +81,7 @@ test('user role cannot delete product', function () {
 });
 
 test('admin can create product with a vendor', function () {
-    Storage::fake('local');
+    Storage::fake('s3');
 
     $admin = User::factory()->create([
         'scope' => ScopeEnum::ADMIN,
@@ -109,7 +109,7 @@ test('admin can create product with a vendor', function () {
 });
 
 test('admin can create product without last30DaysPrice', function () {
-    Storage::fake('local');
+    Storage::fake('s3');
 
     $admin = User::factory()->create([
         'scope' => ScopeEnum::ADMIN,
@@ -218,7 +218,7 @@ test('admin can delete product', function () {
 });
 
 test('vendor can create product', function () {
-    Storage::fake('local');
+    Storage::fake('s3');
 
     $vendor = User::factory()->create([
         'scope' => ScopeEnum::VENDOR,
@@ -324,7 +324,7 @@ test('vendor can delete own product', function () {
 });
 
 test('superadmin can create product', function () {
-    Storage::fake('local');
+    Storage::fake('s3');
 
     $superadmin = User::factory()->create([
         'scope' => ScopeEnum::SUPERADMIN,
@@ -471,7 +471,7 @@ test('create product rejects a non-image file', function () {
 });
 
 test('admin can update product image', function () {
-    Storage::fake('local');
+    Storage::fake('s3');
 
     $admin = User::factory()->create([
         'scope' => ScopeEnum::ADMIN,

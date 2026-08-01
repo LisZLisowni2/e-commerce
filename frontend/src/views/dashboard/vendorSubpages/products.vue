@@ -9,7 +9,7 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { useProducts } from "@/composables/useProducts";
-import { Eraser, Pencil, Plug, Plus, Search, UserPlus } from "@lucide/vue";
+import { Eraser, Pencil, Plus, Search } from "@lucide/vue";
 import {
     Dialog,
     DialogContent,
@@ -182,13 +182,15 @@ const filteredData = computed(() => {
     })
 })
 
-function handleFileChangesAdd(event) {
-    const file = event.target.files[0];
+function handleFileChangesAdd(event: Event) {
+    const target = event.target as HTMLInputElement;
+    const file = target.files?.[0]
     addImage.value = file
 }
 
-function handleFileChanges(event) {
-    const file = event.target.files[0];
+function handleFileChanges(event: Event) {
+    const target = event.target as HTMLInputElement;
+    const file = target.files?.[0]
     image.value = file
 }
 
