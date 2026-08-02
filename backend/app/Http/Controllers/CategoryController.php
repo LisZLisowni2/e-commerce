@@ -87,6 +87,28 @@ class CategoryController extends Controller
             $data['slug'] = Str::slug($data['name']);
         }
 
+        // Check if there is cycle in the tree
+        $stack = [$category];
+        $seen = [];
+        while (count($stack) > 0) {
+            $currentCategory = array_pop($stack);
+            if (in_array($currentCategory->id, $seen)) {
+                return response()->json([
+                    "message" => "Cycle in tree detected while update"
+                ], 409);
+            }
+            $seen[] = $currentCategory->id;
+
+            // Reject if the new parent would become the updated category's descendant
+            if (isset($data['parent_id']) && (int) $data['parent_id'] === $currentCategory->id) {
+                return response()->json([
+                    "message" => "Cycle in tree detected while update"
+                ], 409);
+            }
+
+            $stack = array_merge($stack, $currentCategory->children()->get()->all());
+        }
+
         $category->update($data);
         return response()->json([
             "category" => $category
