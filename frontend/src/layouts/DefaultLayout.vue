@@ -3,7 +3,7 @@ import { useForm, useField } from "vee-validate";
 import { useMutation, useQueryClient } from "@tanstack/vue-query";
 import { toTypedSchema } from "@vee-validate/zod";
 import * as z from "zod";
-import { computed, onMounted } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { RouterView } from "vue-router";
 import { useThemeStore } from "@/stores/useThemeStore";
 import Button from "@/components/ui/button/Button.vue";
@@ -16,7 +16,7 @@ import {
     NavigationMenuTrigger,
     navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
-import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import IconDropdown from "@/components/navigation/IconDropdown.vue";
 import {
     Search,
@@ -49,6 +49,14 @@ import { useCategories } from "@/composables/useCategories";
 import type { Category } from "@/types/Category";
 import type { NavItem } from "@/types/NavItem";
 import NavSubMenu from "@/components/navigation/NavSubMenu.vue";
+import { 
+    Command,
+    CommandInput,
+    CommandList,
+    CommandEmpty,
+    CommandGroup,
+    CommandItem
+} from "@/components/ui/command"
 
 const authStore = useAuthStore();
 
@@ -60,6 +68,7 @@ onMounted(async () => {
     }
 });
 
+const query = ref("")
 const { data } = useCategories();
 const themeStore = useThemeStore();
 
@@ -87,7 +96,6 @@ const navElements = computed(() => {
     if (!data.value) return [];
 
     const nav = extractSubcategories(data.value.categories);
-    console.log(nav)
     return nav
 });
 
@@ -173,13 +181,21 @@ const onLogoutSubmit = () => {
                 Theme
             </Button>
         </div>
-        <div class="flex-1">
-            <InputGroup>
-                <InputGroupInput placeholder="Search..." />
-                <InputGroupAddon>
-                    <Search />
-                </InputGroupAddon>
-            </InputGroup>
+        <div class="relative w-full z-50">
+            <Command class="z-50 rounded-lg border border-zinc-800">
+                <CommandInput 
+                    placeholder="Search..."
+                    v-model="query"
+                />
+                
+                <CommandList v-if="query.trim().length > 0" class="absolute top-full left-0 right-0 mt-1 z-50 min-h-40 rounded-md border border-zinc-800 bg-zinc-950 shadow-xl">
+                    <CommandEmpty>No result found</CommandEmpty>
+                    <CommandGroup heading="Result">
+                        <CommandItem value="result_1">Result 1</CommandItem>
+                        <CommandItem value="result_2">Result 2</CommandItem>
+                    </CommandGroup>
+                </CommandList>
+            </Command>
         </div>
         <div class="flex gap-4 shrink-0 max-md:m-auto ml-auto">
             <IconDropdown>
@@ -366,7 +382,9 @@ const onLogoutSubmit = () => {
                     <!-- If item has subnames, render Trigger + Content panel -->
                     <template v-if="item.subnames && item.subnames.length > 0">
                         <NavigationMenuTrigger>
-                            {{ item.name }}
+                            <RouterLink :to="item.link">
+                                {{ item.name }}
+                            </RouterLink>
                         </NavigationMenuTrigger>
 
                         <NavigationMenuContent>
