@@ -43,7 +43,7 @@ test('products can be filtered by search query', function () {
     Product::factory()->create(['name' => 'MacBook Pro']);
     Product::factory()->create(['name' => 'Gaming Laptop']);
 
-    $response = $this->getJson('/api/products?search_query=RTX');
+    $response = $this->getJson('/api/products?search_query=rtx');
 
     $response->assertStatus(200);
     expect($response->json('products'))->toHaveCount(1);
@@ -58,7 +58,7 @@ test('products can be filtered by vendor and search query together', function ()
     Product::factory()->create(['vendor_id' => $vendor->id, 'name' => 'MacBook Pro']);
     Product::factory()->create(['vendor_id' => $otherVendor->id, 'name' => 'RTX 5090']);
 
-    $response = $this->getJson('/api/products?vendor_id=' . $vendor->id . '&search_query=RTX');
+    $response = $this->getJson('/api/products?vendor_id=' . $vendor->id . '&search_query=rtx');
 
     $response->assertStatus(200);
     expect($response->json('products'))->toHaveCount(1);

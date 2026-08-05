@@ -54,7 +54,7 @@ import {
 } from "@/components/ui/command"
 
 const query = ref("")
-const { data: products } = useProducts({ searchQuery: query.value })
+const { data: products } = useProducts({ searchQuery: query })
 
 const queryResults = computed(() => {
     if (query.value === "") return []

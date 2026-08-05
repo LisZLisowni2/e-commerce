@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { ref, toValue } from "vue";
 import { useProducts } from "@/composables/useProducts";
 import { useQuery } from "@tanstack/vue-query";
 import api from "@/api";
@@ -42,51 +43,76 @@ describe("useProducts", () => {
     });
 
     it("calls useQuery with correct query key and query function", () => {
-        vi.mocked(useQuery).mockReturnValue({
-            data: undefined,
-            isLoading: true,
-            error: null,
-        } as any);
+        let opts: { queryKey?: unknown; queryFn?: unknown } = {};
+
+        vi.mocked(useQuery).mockImplementation((o: any) => {
+            opts = o;
+            return {
+                data: undefined,
+                isLoading: true,
+                error: null,
+            } as any;
+        });
 
         useProducts({});
 
-        expect(useQuery).toHaveBeenCalledWith(
-            expect.objectContaining({
-                queryKey: ["products", undefined, undefined],
-            }),
-        );
+        expect(toValue(opts.queryKey)).toEqual(["products", undefined, undefined]);
+        expect(opts.queryFn).toBeTypeOf("function");
     });
 
     it("uses a vendor-specific query key when vendorId is provided", () => {
-        vi.mocked(useQuery).mockReturnValue({
-            data: undefined,
-            isLoading: true,
-            error: null,
-        } as any);
+        let opts: { queryKey?: unknown } = {};
+
+        vi.mocked(useQuery).mockImplementation((o: any) => {
+            opts = o;
+            return {
+                data: undefined,
+                isLoading: true,
+                error: null,
+            } as any;
+        });
 
         useProducts({ vendorId: 7 });
 
-        expect(useQuery).toHaveBeenCalledWith(
-            expect.objectContaining({
-                queryKey: ["products", 7, undefined],
-            }),
-        );
+        expect(toValue(opts.queryKey)).toEqual(["products", 7, undefined]);
     });
 
     it("uses a search-specific query key when searchQuery is provided", () => {
-        vi.mocked(useQuery).mockReturnValue({
-            data: undefined,
-            isLoading: true,
-            error: null,
-        } as any);
+        let opts: { queryKey?: unknown } = {};
+
+        vi.mocked(useQuery).mockImplementation((o: any) => {
+            opts = o;
+            return {
+                data: undefined,
+                isLoading: true,
+                error: null,
+            } as any;
+        });
 
         useProducts({ searchQuery: "rtx" });
 
-        expect(useQuery).toHaveBeenCalledWith(
-            expect.objectContaining({
-                queryKey: ["products", undefined, "rtx"],
-            }),
-        );
+        expect(toValue(opts.queryKey)).toEqual(["products", undefined, "rtx"]);
+    });
+
+    it("reacts to changes in the reactive searchQuery", () => {
+        let opts: { queryKey?: unknown } = {};
+
+        vi.mocked(useQuery).mockImplementation((o: any) => {
+            opts = o;
+            return {
+                data: undefined,
+                isLoading: true,
+                error: null,
+            } as any;
+        });
+
+        const searchQuery = ref("");
+        useProducts({ searchQuery });
+
+        expect(toValue(opts.queryKey)).toEqual(["products", undefined, ""]);
+
+        searchQuery.value = "rtx";
+        expect(toValue(opts.queryKey)).toEqual(["products", undefined, "rtx"]);
     });
 
     it("fetches products filtered by vendor from /products?vendor_id", async () => {
@@ -129,6 +155,54 @@ describe("useProducts", () => {
         await queryFn!();
 
         expect(api.get).toHaveBeenCalledWith("/products?search_query=rtx");
+    });
+
+    it("fetches the latest search query when searchQuery changes reactively", async () => {
+        let queryFn: () => Promise<any>;
+        const searchQuery = ref("");
+
+        vi.mocked(useQuery).mockImplementation((opts: any) => {
+            queryFn = opts.queryFn;
+            return {
+                data: undefined,
+                isLoading: true,
+                error: null,
+            } as any;
+        });
+
+        useProducts({ searchQuery });
+
+        searchQuery.value = "rtx";
+        vi.mocked(api.get).mockResolvedValue({ data: { products: mockProducts } });
+
+        await queryFn!();
+
+        expect(api.get).toHaveBeenCalledWith("/products?search_query=rtx");
+    });
+
+    it("URL-encodes the search query", async () => {
+        let queryFn: () => Promise<any>;
+        const searchQuery = ref("");
+
+        vi.mocked(useQuery).mockImplementation((opts: any) => {
+            queryFn = opts.queryFn;
+            return {
+                data: undefined,
+                isLoading: true,
+                error: null,
+            } as any;
+        });
+
+        useProducts({ searchQuery });
+
+        searchQuery.value = "rtx 5070 & more";
+        vi.mocked(api.get).mockResolvedValue({ data: { products: mockProducts } });
+
+        await queryFn!();
+
+        expect(api.get).toHaveBeenCalledWith(
+            "/products?search_query=rtx+5070+%26+more",
+        );
     });
 
     it("fetches products from /products endpoint", async () => {
