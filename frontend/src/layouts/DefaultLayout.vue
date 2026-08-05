@@ -19,16 +19,11 @@ import {
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import IconDropdown from "@/components/navigation/IconDropdown.vue";
 import {
-    Search,
     CircleUserRound,
     Phone,
     ShoppingBasket,
 } from "lucide-vue-next";
-import {
-    InputGroup,
-    InputGroupAddon,
-    InputGroupInput,
-} from "@/components/ui/input-group";
+import { useProducts } from "@/composables/useProducts";
 import {
     Dialog,
     DialogContent,
@@ -58,6 +53,15 @@ import {
     CommandItem
 } from "@/components/ui/command"
 
+const query = ref("")
+const { data: products } = useProducts({ searchQuery: query.value })
+
+const queryResults = computed(() => {
+    if (query.value === "") return []
+
+    return products.value
+})
+
 const authStore = useAuthStore();
 
 onMounted(async () => {
@@ -68,7 +72,6 @@ onMounted(async () => {
     }
 });
 
-const query = ref("")
 const { data } = useCategories();
 const themeStore = useThemeStore();
 
@@ -190,9 +193,10 @@ const onLogoutSubmit = () => {
                 
                 <CommandList v-if="query.trim().length > 0" class="absolute top-full left-0 right-0 mt-1 z-50 min-h-40 rounded-md border border-zinc-800 bg-zinc-950 shadow-xl">
                     <CommandEmpty>No result found</CommandEmpty>
-                    <CommandGroup heading="Result">
-                        <CommandItem value="result_1">Result 1</CommandItem>
-                        <CommandItem value="result_2">Result 2</CommandItem>
+                    <CommandGroup heading="Results">
+                        <CommandItem v-for="product in queryResults" :value="product.id">
+                            {{ product.name }}
+                        </CommandItem>
                     </CommandGroup>
                 </CommandList>
             </Command>

@@ -48,7 +48,7 @@ describe("useProducts", () => {
             error: null,
         } as any);
 
-        useProducts();
+        useProducts({});
 
         expect(useQuery).toHaveBeenCalledWith(
             expect.objectContaining({
@@ -69,7 +69,7 @@ describe("useProducts", () => {
             } as any;
         });
 
-        useProducts();
+        useProducts({});
 
         vi.mocked(api.get).mockResolvedValue({ data: { products: mockProducts } });
 
@@ -91,7 +91,7 @@ describe("useProducts", () => {
             } as any;
         });
 
-        useProducts();
+        useProducts({});
 
         vi.mocked(api.get).mockResolvedValue({ data: { products: mockProducts } });
 
@@ -114,7 +114,7 @@ describe("useProducts", () => {
             } as any;
         });
 
-        useProducts();
+        useProducts({});
 
         vi.mocked(api.get).mockRejectedValue(new Error("Network Error"));
 

@@ -12,9 +12,10 @@ use Illuminate\Validation\Rule;
 class ProductController extends Controller
 {
     public function index(Request $request): JsonResponse
-    {
+    {   
         $products = Product::query()
             ->when($request->has('vendor_id'), fn ($query) => $query->where('vendor_id', $request->integer('vendor_id')))
+            ->when($request->has('search_query'), fn ($query) => $query->where('name', 'like', "%{$request->string('search_query')}%"))
             ->get();
 
         return response()->json(["products" => $products]);

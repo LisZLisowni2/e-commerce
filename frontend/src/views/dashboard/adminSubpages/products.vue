@@ -193,7 +193,7 @@ const onDelete = (productID: number) => {
     deleteMutation(productID)
 }
 
-const { data, isLoading } = useProducts();
+const { data, isLoading } = useProducts({});
 const { data: usersData } = useUsers();
 const { data: categoryData } = useCategoriesFlat();
 

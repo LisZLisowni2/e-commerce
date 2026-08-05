@@ -180,7 +180,7 @@ const onDelete = (productID: number) => {
     deleteMutation(productID)
 }
 
-const { data, isLoading } = useProducts(authStore.user?.id);
+const { data, isLoading } = useProducts({ vendorId: authStore.user?.id });
 const { data: categoryData } = useCategoriesFlat();
 
 const filterInput = ref("")

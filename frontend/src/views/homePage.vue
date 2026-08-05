@@ -9,9 +9,9 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 
 import Section from "@/components/ui/Section.vue";
-const modules = [Navigation, Pagination, A11y];
 
-const { data: products, isLoading, error } = useProducts();
+const { data: products, isLoading, error } = useProducts({});
+const modules = [Navigation, Pagination, A11y];
 </script>
 
 <template>
