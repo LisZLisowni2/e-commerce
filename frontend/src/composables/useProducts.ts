@@ -9,7 +9,7 @@ interface UseProductsOptions {
 
 export function useProducts(options: UseProductsOptions = {}) {
     return useQuery({
-        queryKey: ["products", () => options?.vendorId, () => options?.searchQuery],
+        queryKey: ["products", options?.vendorId, options?.searchQuery],
         queryFn: async () => {
             const { vendorId, searchQuery } = options ?? {};
             

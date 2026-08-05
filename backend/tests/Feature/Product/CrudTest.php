@@ -38,6 +38,42 @@ test('products can be filtered by vendor', function () {
     expect(count($response->json('products')))->toBe(2);
 });
 
+test('products can be filtered by search query', function () {
+    Product::factory()->create(['name' => 'RTX 5070']);
+    Product::factory()->create(['name' => 'MacBook Pro']);
+    Product::factory()->create(['name' => 'Gaming Laptop']);
+
+    $response = $this->getJson('/api/products?search_query=RTX');
+
+    $response->assertStatus(200);
+    expect($response->json('products'))->toHaveCount(1);
+    expect($response->json('products.0.name'))->toBe('RTX 5070');
+});
+
+test('products can be filtered by vendor and search query together', function () {
+    $vendor = User::factory()->create(['scope' => ScopeEnum::VENDOR]);
+    $otherVendor = User::factory()->create(['scope' => ScopeEnum::VENDOR]);
+
+    Product::factory()->create(['vendor_id' => $vendor->id, 'name' => 'RTX 5070']);
+    Product::factory()->create(['vendor_id' => $vendor->id, 'name' => 'MacBook Pro']);
+    Product::factory()->create(['vendor_id' => $otherVendor->id, 'name' => 'RTX 5090']);
+
+    $response = $this->getJson('/api/products?vendor_id=' . $vendor->id . '&search_query=RTX');
+
+    $response->assertStatus(200);
+    expect($response->json('products'))->toHaveCount(1);
+    expect($response->json('products.0.name'))->toBe('RTX 5070');
+});
+
+test('search query returns an empty list when nothing matches', function () {
+    Product::factory()->create(['name' => 'RTX 5070']);
+
+    $response = $this->getJson('/api/products?search_query=nonexistent');
+
+    $response->assertStatus(200);
+    expect($response->json('products'))->toHaveCount(0);
+});
+
 test('user role cannot create product', function () {
     $user = User::factory()->create([
         'scope' => ScopeEnum::USER,
