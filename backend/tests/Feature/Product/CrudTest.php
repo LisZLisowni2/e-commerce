@@ -74,6 +74,23 @@ test('search query returns an empty list when nothing matches', function () {
     expect($response->json('products'))->toHaveCount(0);
 });
 
+test('search query treats % and _ as literal characters', function () {
+    Product::factory()->create(['name' => '100% cashback']);
+    Product::factory()->create(['name' => '100 percent cashback']);
+    Product::factory()->create(['name' => 'Gaming_Ultra']);
+    Product::factory()->create(['name' => 'Gaming Ultra']);
+
+    $response = $this->getJson('/api/products?search_query=100%25');
+    $response->assertStatus(200);
+    expect($response->json('products'))->toHaveCount(1);
+    expect($response->json('products.0.name'))->toBe('100% cashback');
+
+    $response = $this->getJson('/api/products?search_query=Gaming_Ultra');
+    $response->assertStatus(200);
+    expect($response->json('products'))->toHaveCount(1);
+    expect($response->json('products.0.name'))->toBe('Gaming_Ultra');
+});
+
 test('user role cannot create product', function () {
     $user = User::factory()->create([
         'scope' => ScopeEnum::USER,

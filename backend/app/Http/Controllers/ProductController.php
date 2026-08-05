@@ -17,11 +17,13 @@ class ProductController extends Controller
         $products = Product::query()
             ->when($request->filled('vendor_id'), fn ($query) => $query->where('vendor_id', $request->integer('vendor_id')))
             ->when($request->filled('search_query'), function ($query) use ($request) {
+                $term = $request->string('search_query')->replace(['%', '_'], ['\\%', '\\_']);
+
                 if (DB::getDriverName() === 'pgsql') {
-                    return $query->where('name', 'ILIKE', "%{$request->string('search_query')}%");
+                    return $query->where('name', 'ILIKE', "%{$term}%");
                 }
-            
-                return $query->where('name', 'LIKE', "%{$request->string('search_query')}%");
+
+                return $query->whereRaw("name LIKE ? ESCAPE '\\'", ["%{$term}%"]);
             }) 
             ->get();
 
