@@ -22,19 +22,40 @@ import { Button } from "@/components/ui/button";
 import FormField from "@/components/ui/FormField.vue";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import * as z from "zod"
+import * as z from "zod";
 import { useForm, useField } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/zod";
-import { fromDate, getLocalTimeZone, type DateValue } from "@internationalized/date";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+    fromDate,
+    getLocalTimeZone,
+    type DateValue,
+} from "@internationalized/date";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover";
 import Calendar from "@/components/ui/calendar/Calendar.vue";
 import { useMutation, useQueryClient } from "@tanstack/vue-query";
 import api from "@/api";
-import { computed, ref } from "vue";
+import { ref } from "vue";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
+import {
+    Pagination,
+    PaginationContent,
+    PaginationPrevious,
+    PaginationItem,
+    PaginationNext,
+    PaginationEllipsis,
+} from "@/components/ui/pagination";
 
 const userSchema = z.object({
     email: z.string().email(),
@@ -42,145 +63,190 @@ const userSchema = z.object({
     status: z.string(),
     first_name: z.string().optional(),
     last_name: z.string().optional(),
-    phone: z.string().regex(/^\+?[1-9]\d{7,14}$/, { message: "Must be a valid phone number" }).optional(),
-    date_of_birth: z.custom<DateValue>((val) => val !== null && val !== undefined, {
-        message: "Please select a date",
-    }).transform((val) => val.toDate(getLocalTimeZone())).optional(),
-    gender: z.string().optional()
-})
+    phone: z
+        .string()
+        .regex(/^\+?[1-9]\d{7,14}$/, {
+            message: "Must be a valid phone number",
+        })
+        .optional(),
+    date_of_birth: z
+        .custom<DateValue>((val) => val !== null && val !== undefined, {
+            message: "Please select a date",
+        })
+        .transform((val) => val.toDate(getLocalTimeZone()))
+        .optional(),
+    gender: z.string().optional(),
+});
 
-type userSchemaType = z.infer<typeof userSchema>
+type userSchemaType = z.infer<typeof userSchema>;
 
 const addUserSchema = z.object({
     email: z.string().email(),
-    password: z.string().min(8, { message: "Password must be at least 8 characters" }),
+    password: z
+        .string()
+        .min(8, { message: "Password must be at least 8 characters" }),
     scope: z.string(),
     status: z.string(),
     first_name: z.string().optional(),
     last_name: z.string().optional(),
-    phone: z.string().regex(/^\+?[1-9]\d{7,14}$/, { message: "Must be a valid phone number" }).optional(),
-    date_of_birth: z.custom<DateValue>((val) => val !== null && val !== undefined, {
-        message: "Please select a date",
-    }).transform((val) => val.toDate(getLocalTimeZone())).optional(),
-    gender: z.string().optional()
-})
+    phone: z
+        .string()
+        .regex(/^\+?[1-9]\d{7,14}$/, {
+            message: "Must be a valid phone number",
+        })
+        .optional(),
+    date_of_birth: z
+        .custom<DateValue>((val) => val !== null && val !== undefined, {
+            message: "Please select a date",
+        })
+        .transform((val) => val.toDate(getLocalTimeZone()))
+        .optional(),
+    gender: z.string().optional(),
+});
 
-type addUserSchemaType = z.infer<typeof addUserSchema>
+type addUserSchemaType = z.infer<typeof addUserSchema>;
 
 const editForm = useForm<userSchemaType>({
-    validationSchema: toTypedSchema(userSchema)
-})
+    validationSchema: toTypedSchema(userSchema),
+});
 
-const { handleSubmit, defineField, errors } = editForm
+const { handleSubmit, defineField, errors } = editForm;
 
-const [email, emailAttrs] = defineField('email')
-const [scope, scopeAttrs] = defineField('scope')
-const [status, statusAttrs] = defineField('status')
-const [firstname, firstnameAttrs] = defineField('first_name')
-const [lastname, lastnameAttrs] = defineField('last_name')
-const [phone, phoneAttrs] = defineField('phone')
-const [gender, genderAttrs] = defineField('gender')
+const [email, emailAttrs] = defineField("email");
+const [scope, scopeAttrs] = defineField("scope");
+const [status, statusAttrs] = defineField("status");
+const [firstname, firstnameAttrs] = defineField("first_name");
+const [lastname, lastnameAttrs] = defineField("last_name");
+const [phone, phoneAttrs] = defineField("phone");
+const [gender, genderAttrs] = defineField("gender");
 
-const { value: dateOfBirth } = useField<DateValue>('date_of_birth', undefined, { form: editForm })
+const { value: dateOfBirth } = useField<DateValue>("date_of_birth", undefined, {
+    form: editForm,
+});
 
 const addForm = useForm<addUserSchemaType>({
-    validationSchema: toTypedSchema(addUserSchema)
-})
+    validationSchema: toTypedSchema(addUserSchema),
+});
 
-const { errors: addErrors } = addForm
+const { errors: addErrors } = addForm;
 
-const [addEmail, addEmailAttrs] = addForm.defineField('email')
-const [addPassword, addPasswordAttrs] = addForm.defineField('password')
-const [addScope, addScopeAttrs] = addForm.defineField('scope')
-const [addStatus, addStatusAttrs] = addForm.defineField('status')
-const [addFirstname, addFirstnameAttrs] = addForm.defineField('first_name')
-const [addLastname, addLastnameAttrs] = addForm.defineField('last_name')
-const [addPhone, addPhoneAttrs] = addForm.defineField('phone')
-const [addGender, addGenderAttrs] = addForm.defineField('gender')
+const [addEmail, addEmailAttrs] = addForm.defineField("email");
+const [addPassword, addPasswordAttrs] = addForm.defineField("password");
+const [addScope, addScopeAttrs] = addForm.defineField("scope");
+const [addStatus, addStatusAttrs] = addForm.defineField("status");
+const [addFirstname, addFirstnameAttrs] = addForm.defineField("first_name");
+const [addLastname, addLastnameAttrs] = addForm.defineField("last_name");
+const [addPhone, addPhoneAttrs] = addForm.defineField("phone");
+const [addGender, addGenderAttrs] = addForm.defineField("gender");
 
-const { value: addDateOfBirth } = useField<DateValue>('date_of_birth', undefined, { form: addForm })
+const { value: addDateOfBirth } = useField<DateValue>(
+    "date_of_birth",
+    undefined,
+    { form: addForm },
+);
 
-const authStore = useAuthStore()
-const queryClient = useQueryClient()
+const authStore = useAuthStore();
+const queryClient = useQueryClient();
 
 const { mutate: updateMutation } = useMutation({
-    mutationFn: async (credentials: userSchemaType & {
-        id: number
-    }) => {
-        const { data } = await api.put(`/users/${credentials.id}`, credentials)
-        return data
+    mutationFn: async (
+        credentials: userSchemaType & {
+            id: number;
+        },
+    ) => {
+        const { data } = await api.put(`/users/${credentials.id}`, credentials);
+        return data;
     },
     onSuccess: () => {
-        queryClient.invalidateQueries()
-    }
-})
+        queryClient.invalidateQueries();
+    },
+});
 
 const { mutate: deleteMutation } = useMutation({
     mutationFn: async (id: number) => {
-        const { data } = await api.delete(`/users/${id}`)
-        return data
+        const { data } = await api.delete(`/users/${id}`);
+        return data;
     },
     onSuccess: () => {
-        queryClient.invalidateQueries()
-    }
-})
+        queryClient.invalidateQueries();
+    },
+});
 
 const { mutate: createMutation } = useMutation({
     mutationFn: async (credentials: addUserSchemaType) => {
-        const { data } = await api.post(`/users`, credentials)
-        return data
+        const { data } = await api.post(`/users`, credentials);
+        return data;
     },
     onSuccess: () => {
-        queryClient.invalidateQueries()
-    }
-})
+        queryClient.invalidateQueries();
+    },
+});
 
-const selectedUser = ref<number>(-1)
+const selectedUser = ref<number>(-1);
 
 const onSubmit = handleSubmit((values) => {
     if (selectedUser.value < 0) return;
 
-    if (authStore.user?.scope !== "SUPERADMIN" && values.scope === "SUPERADMIN") return;
+    if (authStore.user?.scope !== "SUPERADMIN" && values.scope === "SUPERADMIN")
+        return;
 
     updateMutation({
         ...values,
-        id: selectedUser.value
-    })
-})
+        id: selectedUser.value,
+    });
+});
 
 const onAddSubmit = addForm.handleSubmit((values) => {
-    if (authStore.user?.scope !== "SUPERADMIN" && values.scope === "SUPERADMIN") return;
+    if (authStore.user?.scope !== "SUPERADMIN" && values.scope === "SUPERADMIN")
+        return;
 
-    createMutation(values)
-})
+    createMutation(values);
+});
 
 const onDelete = (userID: number) => {
     if (userID === authStore.user?.id) return;
 
-    deleteMutation(userID)
-}
+    deleteMutation(userID);
+};
 
-const { data, isLoading } = useUsers();
+const currentPage = ref<number>(1);
 
-const filterInput = ref("")
+const { data, isLoading, isError, error } = useUsers(currentPage);
 
-const filteredData = computed(() => {
-    return data.value?.users.filter((user) => {
-        return user.email.toLowerCase().startsWith(filterInput.value.toLocaleLowerCase())
-    })
-})
 </script>
 
 <template>
     <h1 v-if="isLoading">Loading...</h1>
+    <h1 v-else-if="isError" class="text-red-500">{{ error }}</h1>
     <div v-else>
         <div class="flex items-center justify-between">
-            <InputGroup class="max-w-sm">
-                <InputGroupInput v-model="filterInput" placeholder="Search..." />
-                <InputGroupAddon>
-                    <Search />
-                </InputGroupAddon>
-            </InputGroup>
+            <Pagination
+                v-model:page="currentPage"
+                :items-per-page="data?.users.per_page ?? 20"
+                :total="data?.users.total"
+                show-edges
+            >
+                <PaginationContent v-slot="{ items }">
+                    <PaginationPrevious />
+
+                    <template v-for="(item, index) in items" :key="index">
+                        <PaginationItem
+                            v-if="item.type === 'page'"
+                            :is-active="item.value === currentPage"
+                            :value="item.value"
+                            as-child
+                        >
+                            <Button variant="outline">
+                                {{ item.value }}
+                            </Button>
+                        </PaginationItem>
+
+                        <PaginationEllipsis v-else />
+                    </template>
+
+                    <PaginationNext />
+                </PaginationContent>
+            </Pagination>
             <Dialog>
                 <DialogTrigger as-child>
                     <Button variant="outline">
@@ -188,9 +254,7 @@ const filteredData = computed(() => {
                     </Button>
                 </DialogTrigger>
                 <DialogContent>
-                    <DialogTitle>
-                        Add User
-                    </DialogTitle>
+                    <DialogTitle> Add User </DialogTitle>
                     <form @submit.prevent="onAddSubmit" class="grid gap-3">
                         <FormField>
                             <Label for="add-email">Email</Label>
@@ -200,10 +264,7 @@ const filteredData = computed(() => {
                                 v-model="addEmail"
                                 v-bind="addEmailAttrs"
                             />
-                            <span
-                                class="text-red-500"
-                                v-if="addErrors.email"
-                            >
+                            <span class="text-red-500" v-if="addErrors.email">
                                 {{ addErrors.email }}
                             </span>
                         </FormField>
@@ -224,14 +285,16 @@ const filteredData = computed(() => {
                         </FormField>
                         <FormField>
                             <Label for="add-scope">Scope</Label>
-                            <Select id="add-scope" v-model="addScope" v-bind="addScopeAttrs">
+                            <Select
+                                id="add-scope"
+                                v-model="addScope"
+                                v-bind="addScopeAttrs"
+                            >
                                 <SelectTrigger>
                                     <SelectValue placeholder="Select a scope" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="user">
-                                        User
-                                    </SelectItem>
+                                    <SelectItem value="user"> User </SelectItem>
                                     <SelectItem value="vendor">
                                         Vendor
                                     </SelectItem>
@@ -243,18 +306,21 @@ const filteredData = computed(() => {
                                     </SelectItem>
                                 </SelectContent>
                             </Select>
-                            <span
-                                class="text-red-500"
-                                v-if="addErrors.scope"
-                            >
+                            <span class="text-red-500" v-if="addErrors.scope">
                                 {{ addErrors.scope }}
                             </span>
                         </FormField>
                         <FormField>
                             <Label for="add-status">Status</Label>
-                            <Select id="add-status" v-model="addStatus" v-bind="addStatusAttrs">
+                            <Select
+                                id="add-status"
+                                v-model="addStatus"
+                                v-bind="addStatusAttrs"
+                            >
                                 <SelectTrigger>
-                                    <SelectValue placeholder="Select a status" />
+                                    <SelectValue
+                                        placeholder="Select a status"
+                                    />
                                 </SelectTrigger>
                                 <SelectContent>
                                     <SelectItem value="active">
@@ -268,10 +334,7 @@ const filteredData = computed(() => {
                                     </SelectItem>
                                 </SelectContent>
                             </Select>
-                            <span
-                                class="text-red-500"
-                                v-if="addErrors.status"
-                            >
+                            <span class="text-red-500" v-if="addErrors.status">
                                 {{ addErrors.status }}
                             </span>
                         </FormField>
@@ -313,10 +376,7 @@ const filteredData = computed(() => {
                                 v-model="addPhone"
                                 v-bind="addPhoneAttrs"
                             />
-                            <span
-                                class="text-red-500"
-                                v-if="addErrors.phone"
-                            >
+                            <span class="text-red-500" v-if="addErrors.phone">
                                 {{ addErrors.phone }}
                             </span>
                         </FormField>
@@ -326,7 +386,11 @@ const filteredData = computed(() => {
                                 <PopoverTrigger as-child>
                                     <Button variant="outline">
                                         <CalendarIcon class="mr-2 h-4 w-4" />
-                                        {{ addDateOfBirth ? addDateOfBirth.toString() : "Pick a date" }}
+                                        {{
+                                            addDateOfBirth
+                                                ? addDateOfBirth.toString()
+                                                : "Pick a date"
+                                        }}
                                     </Button>
                                 </PopoverTrigger>
                                 <PopoverContent class="w-auto p-0">
@@ -337,27 +401,37 @@ const filteredData = computed(() => {
                                     />
                                 </PopoverContent>
                             </Popover>
-                            <p class="text-sm py-2 text-red-500" v-if="addErrors.date_of_birth">{{ addErrors.date_of_birth }}</p>
+                            <p
+                                class="text-sm py-2 text-red-500"
+                                v-if="addErrors.date_of_birth"
+                            >
+                                {{ addErrors.date_of_birth }}
+                            </p>
                         </FormField>
                         <FormField>
                             Gender:
-                                <Select v-bind="addGenderAttrs" v-model="addGender">
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select a gender" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="man">
-                                            Man
-                                        </SelectItem>
-                                        <SelectItem value="woman">
-                                            Woman
-                                        </SelectItem>
-                                        <SelectItem value="nonbinary">
-                                            Nonbinary
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            <p class="text-sm py-2 text-red-500" v-if="addErrors.gender">{{ addErrors.gender }}</p>
+                            <Select v-bind="addGenderAttrs" v-model="addGender">
+                                <SelectTrigger>
+                                    <SelectValue
+                                        placeholder="Select a gender"
+                                    />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="man"> Man </SelectItem>
+                                    <SelectItem value="woman">
+                                        Woman
+                                    </SelectItem>
+                                    <SelectItem value="nonbinary">
+                                        Nonbinary
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <p
+                                class="text-sm py-2 text-red-500"
+                                v-if="addErrors.gender"
+                            >
+                                {{ addErrors.gender }}
+                            </p>
                         </FormField>
                         <DialogFooter>
                             <Button>Add</Button>
@@ -388,7 +462,7 @@ const filteredData = computed(() => {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    <TableRow v-for="user in filteredData">
+                    <TableRow v-for="user in data?.users.data">
                         <TableCell>{{ user.id }}</TableCell>
                         <TableCell>{{ user.email }}</TableCell>
                         <TableCell>{{ user.email_verified_at }}</TableCell>
@@ -404,7 +478,10 @@ const filteredData = computed(() => {
                         <TableCell>
                             <Dialog>
                                 <DialogTrigger as-child>
-                                    <Button variant="outline" @click="selectedUser = user.id">
+                                    <Button
+                                        variant="outline"
+                                        @click="selectedUser = user.id"
+                                    >
                                         <Pencil />
                                     </Button>
                                 </DialogTrigger>
@@ -412,7 +489,10 @@ const filteredData = computed(() => {
                                     <DialogTitle>
                                         Edit User of ID {{ user.id }}
                                     </DialogTitle>
-                                    <form @submit.prevent="onSubmit" class="grid gap-3">
+                                    <form
+                                        @submit.prevent="onSubmit"
+                                        class="grid gap-3"
+                                    >
                                         <FormField>
                                             <Label for="email">Email</Label>
                                             <Input
@@ -431,9 +511,16 @@ const filteredData = computed(() => {
                                         </FormField>
                                         <FormField>
                                             <Label for="scope">Scope</Label>
-                                            <Select id="scope" :default-value="user.scope" v-model="scope" v-bind="scopeAttrs">
+                                            <Select
+                                                id="scope"
+                                                :default-value="user.scope"
+                                                v-model="scope"
+                                                v-bind="scopeAttrs"
+                                            >
                                                 <SelectTrigger>
-                                                    <SelectValue placeholder="Select a scope" />
+                                                    <SelectValue
+                                                        placeholder="Select a scope"
+                                                    />
                                                 </SelectTrigger>
                                                 <SelectContent>
                                                     <SelectItem value="user">
@@ -459,9 +546,16 @@ const filteredData = computed(() => {
                                         </FormField>
                                         <FormField>
                                             <Label for="status">Status</Label>
-                                            <Select id="status" :default-value="user.status" v-model="status" v-bind="statusAttrs">
+                                            <Select
+                                                id="status"
+                                                :default-value="user.status"
+                                                v-model="status"
+                                                v-bind="statusAttrs"
+                                            >
                                                 <SelectTrigger>
-                                                    <SelectValue placeholder="Select a status" />
+                                                    <SelectValue
+                                                        placeholder="Select a status"
+                                                    />
                                                 </SelectTrigger>
                                                 <SelectContent>
                                                     <SelectItem value="active">
@@ -470,7 +564,9 @@ const filteredData = computed(() => {
                                                     <SelectItem value="banned">
                                                         Banned
                                                     </SelectItem>
-                                                    <SelectItem value="inactive">
+                                                    <SelectItem
+                                                        value="inactive"
+                                                    >
                                                         Inactive
                                                     </SelectItem>
                                                 </SelectContent>
@@ -483,7 +579,9 @@ const filteredData = computed(() => {
                                             </span>
                                         </FormField>
                                         <FormField>
-                                            <Label for="firstname">Firstname</Label>
+                                            <Label for="firstname"
+                                                >Firstname</Label
+                                            >
                                             <Input
                                                 id="firstname"
                                                 type="text"
@@ -499,7 +597,9 @@ const filteredData = computed(() => {
                                             </span>
                                         </FormField>
                                         <FormField>
-                                            <Label for="lastname">Lastname</Label>
+                                            <Label for="lastname"
+                                                >Lastname</Label
+                                            >
                                             <Input
                                                 id="lastname"
                                                 type="text"
@@ -535,40 +635,75 @@ const filteredData = computed(() => {
                                             <Popover>
                                                 <PopoverTrigger as-child>
                                                     <Button variant="outline">
-                                                        <CalendarIcon class="mr-2 h-4 w-4" />
-                                                        {{ dateOfBirth ? dateOfBirth.toString() : "Pick a date" }}
+                                                        <CalendarIcon
+                                                            class="mr-2 h-4 w-4"
+                                                        />
+                                                        {{
+                                                            dateOfBirth
+                                                                ? dateOfBirth.toString()
+                                                                : "Pick a date"
+                                                        }}
                                                     </Button>
                                                 </PopoverTrigger>
-                                                <PopoverContent class="w-auto p-0">
-                                                    <Calendar 
+                                                <PopoverContent
+                                                    class="w-auto p-0"
+                                                >
+                                                    <Calendar
                                                         v-model="dateOfBirth"
                                                         :initial-focus="true"
-                                                        :default-value="user.date_of_birth ? fromDate(new Date(user.date_of_birth), getLocalTimeZone()) : undefined"
+                                                        :default-value="
+                                                            user.date_of_birth
+                                                                ? fromDate(
+                                                                      new Date(
+                                                                          user.date_of_birth,
+                                                                      ),
+                                                                      getLocalTimeZone(),
+                                                                  )
+                                                                : undefined
+                                                        "
                                                         layout="month-and-year"
                                                     />
                                                 </PopoverContent>
                                             </Popover>
-                                            <p class="text-sm py-2 text-red-500" v-if="errors.date_of_birth">{{ errors.date_of_birth }}</p>
+                                            <p
+                                                class="text-sm py-2 text-red-500"
+                                                v-if="errors.date_of_birth"
+                                            >
+                                                {{ errors.date_of_birth }}
+                                            </p>
                                         </FormField>
                                         <FormField>
-                                            Gender: 
-                                                <Select :default-value="user.gender" v-bind="genderAttrs" v-model="gender">
-                                                    <SelectTrigger>
-                                                        <SelectValue placeholder="Select a gender" />
-                                                    </SelectTrigger>
-                                                    <SelectContent>
-                                                        <SelectItem value="man">
-                                                            Man
-                                                        </SelectItem>
-                                                        <SelectItem value="woman">
-                                                            Woman
-                                                        </SelectItem>
-                                                        <SelectItem value="nonbinary">
-                                                            Nonbinary
-                                                        </SelectItem>
-                                                    </SelectContent>
-                                                </Select>
-                                            <p class="text-sm py-2 text-red-500" v-if="errors.gender">{{ errors.gender }}</p>
+                                            Gender:
+                                            <Select
+                                                :default-value="user.gender"
+                                                v-bind="genderAttrs"
+                                                v-model="gender"
+                                            >
+                                                <SelectTrigger>
+                                                    <SelectValue
+                                                        placeholder="Select a gender"
+                                                    />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="man">
+                                                        Man
+                                                    </SelectItem>
+                                                    <SelectItem value="woman">
+                                                        Woman
+                                                    </SelectItem>
+                                                    <SelectItem
+                                                        value="nonbinary"
+                                                    >
+                                                        Nonbinary
+                                                    </SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                            <p
+                                                class="text-sm py-2 text-red-500"
+                                                v-if="errors.gender"
+                                            >
+                                                {{ errors.gender }}
+                                            </p>
                                         </FormField>
                                         <DialogFooter>
                                             <Button>Edit</Button>
@@ -579,7 +714,7 @@ const filteredData = computed(() => {
                         </TableCell>
                         <TableCell>
                             <Dialog>
-                                <DialogTrigger as-child> 
+                                <DialogTrigger as-child>
                                     <Button variant="outline">
                                         <Eraser />
                                     </Button>
@@ -591,8 +726,14 @@ const filteredData = computed(() => {
                                     Are you sure?
                                     <DialogFooter>
                                         <DialogClose class="flex gap-3">
-                                            <Button variant="destructive" @click="onDelete(user.id)">Yes</Button>
-                                            <Button variant="outline">No</Button>
+                                            <Button
+                                                variant="destructive"
+                                                @click="onDelete(user.id)"
+                                                >Yes</Button
+                                            >
+                                            <Button variant="outline"
+                                                >No</Button
+                                            >
                                         </DialogClose>
                                     </DialogFooter>
                                 </DialogContent>
@@ -601,7 +742,7 @@ const filteredData = computed(() => {
                     </TableRow>
                 </TableBody>
             </Table>
-            <ScrollBar orientation="horizontal"/>
+            <ScrollBar orientation="horizontal" />
         </ScrollArea>
     </div>
 </template>

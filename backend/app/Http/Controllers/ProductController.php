@@ -24,7 +24,7 @@ class ProductController extends Controller
                 }
 
                 return $query->whereRaw("name LIKE ? ESCAPE '\\'", ["%{$term}%"]);
-            }) 
+            })
             ->get();
 
         return response()->json(["products" => $products]);
