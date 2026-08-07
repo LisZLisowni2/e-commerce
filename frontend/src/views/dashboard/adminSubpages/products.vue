@@ -9,7 +9,7 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { useProducts } from "@/composables/useProducts";
-import { useUsers } from "@/composables/useUsers";
+import { useUsersNotPaginate } from "@/composables/useUsers";
 import type { User } from "@/types/User";
 import { Eraser, Pencil, Plus, Search } from "@lucide/vue";
 import {
@@ -34,6 +34,7 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCategoriesFlat } from "@/composables/useCategories";
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5 MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
@@ -193,20 +194,14 @@ const onDelete = (productID: number) => {
     deleteMutation(productID)
 }
 
-const { data, isLoading } = useProducts({});
-const { data: usersData } = useUsers();
+const currentPage = ref(1)
+
+const { data, isLoading } = useProducts({ page: currentPage });
+const { data: usersData } = useUsersNotPaginate();
 const { data: categoryData } = useCategoriesFlat();
 
 const vendors = computed(() => {
     return (usersData.value?.users ?? []).filter((user: User) => user.scope === "vendor")
-})
-
-const filterInput = ref("")
-
-const filteredData = computed(() => {
-    return data.value?.filter((product) => {
-        return product.name.toLowerCase().startsWith(filterInput.value.toLocaleLowerCase())
-    })
 })
 
 function handleFileChangesAdd(event: Event) {
@@ -227,12 +222,33 @@ function handleFileChanges(event: Event) {
     <h1 v-if="isLoading">Loading...</h1>
     <div v-else>
         <div class="flex items-center justify-between">
-            <InputGroup class="max-w-sm">
-                <InputGroupInput v-model="filterInput" placeholder="Search..." />
-                <InputGroupAddon>
-                    <Search />
-                </InputGroupAddon>
-            </InputGroup>
+            <Pagination
+                v-model:page="currentPage"
+                :items-per-page="data?.per_page ?? 20"
+                :total="data?.total"
+                show-edges
+            >
+                <PaginationContent v-slot="{ items }">
+                    <PaginationPrevious />
+
+                    <template v-for="(item, index) in items" :key="index">
+                        <PaginationItem
+                            v-if="item.type === 'page'"
+                            :is-active="item.value === currentPage"
+                            :value="item.value"
+                            as-child
+                        >
+                            <Button :variant="currentPage === item.value ? 'outline' : 'ghost'">
+                                {{ item.value }}
+                            </Button>
+                        </PaginationItem>
+
+                        <PaginationEllipsis v-else />
+                    </template>
+
+                    <PaginationNext />
+                </PaginationContent>
+            </Pagination>
             <Dialog>
                 <DialogTrigger as-child>
                     <Button variant="outline">
@@ -405,7 +421,7 @@ function handleFileChanges(event: Event) {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    <TableRow v-for="product in filteredData">
+                    <TableRow v-for="product in data?.data">
                         <TableCell>{{ product.id }}</TableCell>
                         <TableCell>{{ product.vendor_id }}</TableCell>
                         <TableCell>{{ product.name }}</TableCell>

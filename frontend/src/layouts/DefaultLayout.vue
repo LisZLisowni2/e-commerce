@@ -23,7 +23,7 @@ import {
     Phone,
     ShoppingBasket,
 } from "lucide-vue-next";
-import { useProducts } from "@/composables/useProducts";
+import { useProducts, useProductsNotPagination } from "@/composables/useProducts";
 import {
     Dialog,
     DialogContent,
@@ -54,7 +54,7 @@ import {
 } from "@/components/ui/command"
 
 const query = ref("")
-const { data: products } = useProducts({ searchQuery: query })
+const { data: products } = useProductsNotPagination({ searchQuery: query })
 
 const queryResults = computed(() => {
     if (query.value === "") return []

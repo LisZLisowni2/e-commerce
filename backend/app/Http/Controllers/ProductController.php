@@ -15,17 +15,22 @@ class ProductController extends Controller
     public function index(Request $request): JsonResponse
     {   
         $products = Product::query()
-            ->when($request->filled('vendor_id'), fn ($query) => $query->where('vendor_id', $request->integer('vendor_id')))
-            ->when($request->filled('search_query'), function ($query) use ($request) {
-                $term = $request->string('search_query')->replace(['%', '_'], ['\\%', '\\_']);
+                ->when($request->filled('vendor_id'), fn ($query) => $query->where('vendor_id', $request->integer('vendor_id')))
+                ->when($request->filled('search_query'), function ($query) use ($request) {
+                    $term = $request->string('search_query')->replace(['%', '_'], ['\\%', '\\_']);
 
-                if (DB::getDriverName() === 'pgsql') {
-                    return $query->where('name', 'ILIKE', "%{$term}%");
-                }
+                    if (DB::getDriverName() === 'pgsql') {
+                        return $query->where('name', 'ILIKE', "%{$term}%");
+                    }
 
-                return $query->whereRaw("name LIKE ? ESCAPE '\\'", ["%{$term}%"]);
-            })
-            ->get();
+                    return $query->whereRaw("name LIKE ? ESCAPE '\\'", ["%{$term}%"]);
+                })
+                ->latest();
+    
+        if ($request->boolean('paginated')) {
+            return response()->json(["products" => 
+                $products->paginate(20)]);
+        }
 
         return response()->json(["products" => $products]);
     }

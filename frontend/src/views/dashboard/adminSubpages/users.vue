@@ -236,7 +236,7 @@ const { data, isLoading, isError, error } = useUsers(currentPage);
                             :value="item.value"
                             as-child
                         >
-                            <Button variant="outline">
+                            <Button :variant="currentPage === item.value ? 'outline' : 'ghost'">
                                 {{ item.value }}
                             </Button>
                         </PaginationItem>

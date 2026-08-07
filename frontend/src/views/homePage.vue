@@ -10,7 +10,7 @@ import "swiper/css/pagination";
 
 import Section from "@/components/ui/Section.vue";
 
-const { data: products, isLoading, error } = useProducts({});
+const { data: products, isLoading, error } = useProducts({ page: 1 });
 const modules = [Navigation, Pagination, A11y];
 </script>
 
@@ -46,7 +46,7 @@ const modules = [Navigation, Pagination, A11y];
             class="m-8"
             v-if="!isLoading"
         >
-            <SwiperSlide v-if="!error" v-for="product in products" :key="product.id">
+            <SwiperSlide v-if="!error" v-for="product in products?.data" :key="product.id">
                 <ItemCard 
                     :title="product.name"
                     :price="product.price"

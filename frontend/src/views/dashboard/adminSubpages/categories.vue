@@ -8,9 +8,6 @@ import {
     TableHead,
     TableRow,
 } from "@/components/ui/table";
-import { useProducts } from "@/composables/useProducts";
-import { useUsers } from "@/composables/useUsers";
-import type { User } from "@/types/User";
 import { Eraser, Pencil, Plus, Search } from "@lucide/vue";
 import {
     Dialog,

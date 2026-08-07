@@ -33,6 +33,7 @@ import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/in
 import { useAuthStore } from "@/stores/useAuthStore";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCategories, useCategoriesFlat } from "@/composables/useCategories";
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 
 const authStore = useAuthStore();
 
@@ -180,16 +181,10 @@ const onDelete = (productID: number) => {
     deleteMutation(productID)
 }
 
-const { data, isLoading } = useProducts({ vendorId: authStore.user?.id });
+const currentPage = ref(1)
+
+const { data, isLoading } = useProducts({ vendorId: authStore.user?.id, page: currentPage });
 const { data: categoryData } = useCategoriesFlat();
-
-const filterInput = ref("")
-
-const filteredData = computed(() => {
-    return data.value?.filter((product) => {
-        return product.name.toLowerCase().startsWith(filterInput.value.toLocaleLowerCase())
-    })
-})
 
 function handleFileChangesAdd(event: Event) {
     const target = event.target as HTMLInputElement;
@@ -209,12 +204,33 @@ function handleFileChanges(event: Event) {
     <h1 v-if="isLoading">Loading...</h1>
     <div v-else>
         <div class="flex items-center justify-between">
-            <InputGroup class="max-w-sm">
-                <InputGroupInput v-model="filterInput" placeholder="Search..." />
-                <InputGroupAddon>
-                    <Search />
-                </InputGroupAddon>
-            </InputGroup>
+            <Pagination
+                v-model:page="currentPage"
+                :items-per-page="data?.per_page ?? 20"
+                :total="data?.total"
+                show-edges
+            >
+                <PaginationContent v-slot="{ items }">
+                    <PaginationPrevious />
+
+                    <template v-for="(item, index) in items" :key="index">
+                        <PaginationItem
+                            v-if="item.type === 'page'"
+                            :is-active="item.value === currentPage"
+                            :value="item.value"
+                            as-child
+                        >
+                            <Button :variant="currentPage === item.value ? 'outline' : 'ghost'">
+                                {{ item.value }}
+                            </Button>
+                        </PaginationItem>
+
+                        <PaginationEllipsis v-else />
+                    </template>
+
+                    <PaginationNext />
+                </PaginationContent>
+            </Pagination>
             <Dialog>
                 <DialogTrigger as-child>
                     <Button variant="outline">
@@ -363,7 +379,7 @@ function handleFileChanges(event: Event) {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    <TableRow v-for="product in filteredData">
+                    <TableRow v-for="product in data?.data">
                         <TableCell>{{ product.id }}</TableCell>
                         <TableCell>{{ product.name }}</TableCell>
                         <TableCell>{{ product.description.substring(0, 100) }}</TableCell>
