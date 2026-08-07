@@ -3,6 +3,70 @@
 use App\Models\User;
 use App\ScopeEnum;
 
+test('unauthenticated user cannot list users', function () {
+    User::factory(3)->create();
+
+    $response = $this->getJson('/api/users');
+
+    $response->assertStatus(401);
+});
+
+test('user role cannot list users', function () {
+    $user = User::factory()->create([
+        'scope' => ScopeEnum::USER,
+    ]);
+
+    $response = $this->actingAs($user)->getJson('/api/users');
+
+    $response->assertStatus(403);
+});
+
+test('admin can list users', function () {
+    $admin = User::factory()->create([
+        'scope' => ScopeEnum::ADMIN,
+    ]);
+
+    User::factory(3)->create();
+
+    $response = $this->actingAs($admin)->getJson('/api/users');
+
+    $response->assertStatus(200);
+    expect(count($response->json('users')))->toBe(4);
+});
+
+test('admin can list paginated users', function () {
+    $admin = User::factory()->create([
+        'scope' => ScopeEnum::ADMIN,
+    ]);
+
+    User::factory(25)->create();
+
+    $page1 = $this->actingAs($admin)->getJson('/api/users?paginated=true&page=1');
+
+    $page1->assertStatus(200);
+    $page1->assertJsonPath('users.current_page', 1);
+    $page1->assertJsonPath('users.per_page', 20);
+    $page1->assertJsonPath('users.total', 26);
+    expect(count($page1->json('users.data')))->toBe(20);
+
+    $page2 = $this->actingAs($admin)->getJson('/api/users?paginated=true&page=2');
+
+    $page2->assertStatus(200);
+    $page2->assertJsonPath('users.current_page', 2);
+    expect(count($page2->json('users.data')))->toBe(6);
+});
+
+test('superadmin can list users', function () {
+    $superadmin = User::factory()->create([
+        'scope' => ScopeEnum::SUPERADMIN,
+    ]);
+
+    $response = $this->actingAs($superadmin)->getJson('/api/users');
+
+    $response->assertStatus(200);
+    expect(count($response->json('users')))->toBe(1);
+});
+
 test('unauthenticated user cannot create a user', function () {
     $response = $this->postJson('/api/users', [
         'email' => 'new@example.com',

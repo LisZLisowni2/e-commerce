@@ -28,11 +28,11 @@ class ProductController extends Controller
                 ->latest();
     
         if ($request->boolean('paginated')) {
-            return response()->json(["products" => 
+            return response()->json(["products" =>
                 $products->paginate(20)]);
         }
 
-        return response()->json(["products" => $products]);
+        return response()->json(["products" => $products->get()]);
     }
 
     public function show(Product $product): JsonResponse

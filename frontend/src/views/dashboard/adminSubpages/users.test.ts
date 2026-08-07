@@ -6,6 +6,7 @@ import users from "@/views/dashboard/adminSubpages/users.vue";
 import { useUsers } from "@/composables/useUsers";
 import { useAuthStore } from "@/stores/useAuthStore";
 import type { User } from "@/types/User";
+import type { PaginationResult } from "@/types/PaginationResult";
 
 const mockMutate = vi.fn();
 
@@ -59,6 +60,17 @@ const mockUsers: User[] = [
         updated_at: "2026-01-02",
     },
 ];
+
+const mockPagination: PaginationResult<User> = {
+    data: mockUsers,
+    current_page: 1,
+    last_page: 1,
+    first_page: 1,
+    per_page: 20,
+    total: 2,
+    from: 1,
+    to: 2,
+};
 
 const mountUsers = (user: Partial<User> | null = null, usersData: any = undefined, isLoading = false) => {
     vi.mocked(useUsers).mockReturnValue({
@@ -125,7 +137,7 @@ describe("users.vue", () => {
     });
 
     it("renders users when data is available", () => {
-        const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockUsers });
+        const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockPagination });
         expect(wrapper.text()).toContain("alice@example.com");
         expect(wrapper.text()).toContain("bob@example.com");
         expect(wrapper.text()).toContain("Alice");
@@ -133,7 +145,7 @@ describe("users.vue", () => {
     });
 
     it("renders user details in the table", () => {
-        const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockUsers });
+        const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockPagination });
         expect(wrapper.text()).toContain("user");
         expect(wrapper.text()).toContain("vendor");
         expect(wrapper.text()).toContain("active");
@@ -143,7 +155,7 @@ describe("users.vue", () => {
     });
 
     it("renders table headers", () => {
-        const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockUsers });
+        const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockPagination });
         expect(wrapper.text()).toContain("A list of users");
         expect(wrapper.text()).toContain("ID");
         expect(wrapper.text()).toContain("Email");
@@ -159,48 +171,34 @@ describe("users.vue", () => {
         expect(wrapper.text()).toContain("Updated at");
     });
 
-    it("filters users by email", async () => {
-        const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockUsers });
-        await wrapper.find("input").setValue("bob");
-        expect(wrapper.text()).toContain("bob@example.com");
-        expect(wrapper.text()).not.toContain("alice@example.com");
-    });
-
-    it("shows no rows when the filter matches nothing", async () => {
-        const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockUsers });
-        await wrapper.find("input").setValue("nonexistent");
-        expect(wrapper.text()).not.toContain("alice@example.com");
-        expect(wrapper.text()).not.toContain("bob@example.com");
-    });
-
     it("renders an empty table when there are no users", () => {
-        const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: [] });
+        const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: { ...mockPagination, data: [] } });
         expect(wrapper.text()).toContain("A list of users");
         expect(wrapper.text()).not.toContain("alice@example.com");
     });
 
     it("renders an edit, delete, and add button", () => {
-        const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockUsers });
-        expect(wrapper.findAll("button").length).toBe(5);
+        const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockPagination });
+        expect(wrapper.findAll("button").length).toBe(8);
     });
 
     it("opens the edit dialog with the correct user id", async () => {
-        const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockUsers });
-        const content = await openDialog(wrapper, 1);
+        const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockPagination });
+        const content = await openDialog(wrapper, 4);
         expect(content).toBeTruthy();
         expect(content!.textContent).toContain("Edit User of ID 1");
     });
 
     it("prefills the form with the user email", async () => {
-        const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockUsers });
-        await openDialog(wrapper, 1);
+        const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockPagination });
+        await openDialog(wrapper, 4);
         const emailInput = document.body.querySelector<HTMLInputElement>("#email");
         expect(emailInput!.value).toBe("alice@example.com");
     });
 
     it("submits the edit form with updated values", async () => {
-        const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockUsers });
-        await openDialog(wrapper, 1);
+        const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockPagination });
+        await openDialog(wrapper, 4);
 
         (wrapper.vm as any).email = "new@example.com";
         (wrapper.vm as any).scope = "user";
@@ -215,8 +213,8 @@ describe("users.vue", () => {
     });
 
     it("does not submit when the email is invalid", async () => {
-        const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockUsers });
-        const content = await openDialog(wrapper, 1);
+        const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockPagination });
+        const content = await openDialog(wrapper, 4);
 
         setDialogInput("email", "not-an-email");
         (wrapper.vm as any).scope = "user";
@@ -229,8 +227,8 @@ describe("users.vue", () => {
     });
 
     it("does not submit when the phone number is invalid", async () => {
-        const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockUsers });
-        const content = await openDialog(wrapper, 1);
+        const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockPagination });
+        const content = await openDialog(wrapper, 4);
 
         (wrapper.vm as any).email = "new@example.com";
         (wrapper.vm as any).scope = "user";
@@ -244,8 +242,8 @@ describe("users.vue", () => {
     });
 
     it("blocks non-superadmins from assigning the SUPERADMIN scope", async () => {
-        const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockUsers });
-        await openDialog(wrapper, 1);
+        const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockPagination });
+        await openDialog(wrapper, 4);
 
         (wrapper.vm as any).email = "new@example.com";
         (wrapper.vm as any).status = "active";
@@ -257,8 +255,8 @@ describe("users.vue", () => {
     });
 
     it("allows superadmins to assign the SUPERADMIN scope", async () => {
-        const wrapper = mountUsers({ id: 1, scope: "SUPERADMIN" }, { users: mockUsers });
-        await openDialog(wrapper, 1);
+        const wrapper = mountUsers({ id: 1, scope: "SUPERADMIN" }, { users: mockPagination });
+        await openDialog(wrapper, 4);
 
         (wrapper.vm as any).email = "new@example.com";
         (wrapper.vm as any).status = "active";
@@ -273,14 +271,14 @@ describe("users.vue", () => {
     });
 
     it("opens the delete dialog with the correct user id", async () => {
-        const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockUsers });
-        const content = await openDialog(wrapper, 2);
+        const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockPagination });
+        const content = await openDialog(wrapper, 5);
         expect(content!.textContent).toContain("Deletion of user of ID 1");
     });
 
     it("does not allow deleting your own account", async () => {
-        const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockUsers });
-        await openDialog(wrapper, 2);
+        const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockPagination });
+        await openDialog(wrapper, 5);
         clickDialogButton("Yes");
         await flush();
 
@@ -288,8 +286,8 @@ describe("users.vue", () => {
     });
 
     it("allows deleting another user", async () => {
-        const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockUsers });
-        await openDialog(wrapper, 4);
+        const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockPagination });
+        await openDialog(wrapper, 7);
         clickDialogButton("Yes");
         await flush();
 
@@ -298,15 +296,15 @@ describe("users.vue", () => {
     });
 
     it("opens the add user dialog", async () => {
-        const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockUsers });
-        const content = await openDialog(wrapper, 0);
+        const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockPagination });
+        const content = await openDialog(wrapper, 3);
         expect(content).toBeTruthy();
         expect(content!.textContent).toContain("Add User");
     });
 
     it("submits the add form with valid values", async () => {
-        const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockUsers });
-        await openDialog(wrapper, 0);
+        const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockPagination });
+        await openDialog(wrapper, 3);
 
         (wrapper.vm as any).addEmail = "new@example.com";
         (wrapper.vm as any).addPassword = "password123";
@@ -327,8 +325,8 @@ describe("users.vue", () => {
     });
 
     it("does not submit when the add email is invalid", async () => {
-        const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockUsers });
-        const content = await openDialog(wrapper, 0);
+        const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockPagination });
+        const content = await openDialog(wrapper, 3);
 
         setDialogInput("add-email", "not-an-email");
         (wrapper.vm as any).addPassword = "password123";
@@ -342,8 +340,8 @@ describe("users.vue", () => {
     });
 
     it("does not submit when the password is too short", async () => {
-        const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockUsers });
-        const content = await openDialog(wrapper, 0);
+        const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockPagination });
+        const content = await openDialog(wrapper, 3);
 
         (wrapper.vm as any).addEmail = "new@example.com";
         (wrapper.vm as any).addPassword = "short";
@@ -357,8 +355,8 @@ describe("users.vue", () => {
     });
 
     it("does not submit when the add phone number is invalid", async () => {
-        const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockUsers });
-        const content = await openDialog(wrapper, 0);
+        const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockPagination });
+        const content = await openDialog(wrapper, 3);
 
         (wrapper.vm as any).addEmail = "new@example.com";
         (wrapper.vm as any).addPassword = "password123";
@@ -373,8 +371,8 @@ describe("users.vue", () => {
     });
 
     it("blocks non-superadmins from creating a SUPERADMIN user", async () => {
-        const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockUsers });
-        await openDialog(wrapper, 0);
+        const wrapper = mountUsers({ id: 1, scope: "admin" }, { users: mockPagination });
+        await openDialog(wrapper, 3);
 
         (wrapper.vm as any).addEmail = "new@example.com";
         (wrapper.vm as any).addPassword = "password123";
@@ -387,8 +385,8 @@ describe("users.vue", () => {
     });
 
     it("allows superadmins to create a SUPERADMIN user", async () => {
-        const wrapper = mountUsers({ id: 1, scope: "SUPERADMIN" }, { users: mockUsers });
-        await openDialog(wrapper, 0);
+        const wrapper = mountUsers({ id: 1, scope: "SUPERADMIN" }, { users: mockPagination });
+        await openDialog(wrapper, 3);
 
         (wrapper.vm as any).addEmail = "new@example.com";
         (wrapper.vm as any).addPassword = "password123";

@@ -40,6 +40,17 @@ const mockProducts = [
     },
 ];
 
+const mockPagination = {
+    data: mockProducts,
+    current_page: 1,
+    last_page: 1,
+    first_page: 1,
+    per_page: 20,
+    total: 2,
+    from: 1,
+    to: 2,
+};
+
 const mountHomePage = () =>
     mount(homePage, {
         global: {
@@ -82,7 +93,7 @@ describe("homePage.vue", () => {
 
     it("renders products when data is available", () => {
         vi.mocked(useProducts).mockReturnValue({
-            data: mockProducts,
+            data: mockPagination,
             isLoading: false,
             error: null,
         } as any);
@@ -95,7 +106,7 @@ describe("homePage.vue", () => {
 
     it("passes correct props to ItemCard", () => {
         vi.mocked(useProducts).mockReturnValue({
-            data: mockProducts,
+            data: mockPagination,
             isLoading: false,
             error: null,
         } as any);
@@ -115,7 +126,7 @@ describe("homePage.vue", () => {
 
     it("shows no products when data is empty", () => {
         vi.mocked(useProducts).mockReturnValue({
-            data: [],
+            data: { ...mockPagination, data: [] },
             isLoading: false,
             error: null,
         } as any);

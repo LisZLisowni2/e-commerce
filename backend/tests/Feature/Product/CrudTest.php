@@ -16,6 +16,59 @@ test('unauthenticated user can list products', function () {
     expect(count($response->json('products')))->toBe(3);
 });
 
+test('products are ordered by most recent first', function () {
+    Product::factory()->create(['name' => 'Older Product', 'created_at' => now()->subDays(2)]);
+    Product::factory()->create(['name' => 'Newer Product', 'created_at' => now()->subDay()]);
+
+    $response = $this->getJson('/api/products');
+
+    $response->assertStatus(200);
+    expect($response->json('products.0.name'))->toBe('Newer Product');
+});
+
+test('products can be paginated', function () {
+    Product::factory(25)->create();
+
+    $page1 = $this->getJson('/api/products?paginated=true&page=1');
+
+    $page1->assertStatus(200);
+    $page1->assertJsonPath('products.current_page', 1);
+    $page1->assertJsonPath('products.per_page', 20);
+    $page1->assertJsonPath('products.total', 25);
+    expect(count($page1->json('products.data')))->toBe(20);
+
+    $page2 = $this->getJson('/api/products?paginated=true&page=2');
+
+    $page2->assertStatus(200);
+    $page2->assertJsonPath('products.current_page', 2);
+    expect(count($page2->json('products.data')))->toBe(5);
+});
+
+test('paginated products can be filtered by vendor', function () {
+    $vendorA = User::factory()->create(['scope' => ScopeEnum::VENDOR]);
+    $vendorB = User::factory()->create(['scope' => ScopeEnum::VENDOR]);
+
+    Product::factory(2)->create(['vendor_id' => $vendorA->id]);
+    Product::factory(3)->create(['vendor_id' => $vendorB->id]);
+
+    $response = $this->getJson('/api/products?vendor_id=' . $vendorA->id . '&paginated=true');
+
+    $response->assertStatus(200);
+    $response->assertJsonPath('products.total', 2);
+    expect(count($response->json('products.data')))->toBe(2);
+});
+
+test('paginated products can be filtered by search query', function () {
+    Product::factory(21)->create(['name' => 'MacBook Pro']);
+    Product::factory()->create(['name' => 'RTX 5070']);
+
+    $response = $this->getJson('/api/products?search_query=rtx&paginated=true');
+
+    $response->assertStatus(200);
+    $response->assertJsonPath('products.total', 1);
+    expect($response->json('products.data.0.name'))->toBe('RTX 5070');
+});
+
 test('unauthenticated user can view single product', function () {
     $product = Product::factory()->create();
 

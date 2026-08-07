@@ -6,6 +6,7 @@ import { useProducts } from "@/composables/useProducts";
 import { useCategoriesFlat } from "@/composables/useCategories";
 import type { Product } from "@/types/Product";
 import type { CategoryFlat } from "@/types/Category";
+import type { PaginationResult } from "@/types/PaginationResult";
 
 const mockMutate = vi.fn();
 
@@ -70,6 +71,17 @@ const mockProducts: Product[] = [
     },
 ];
 
+const mockPagination: PaginationResult<Product> = {
+    data: mockProducts,
+    current_page: 1,
+    last_page: 1,
+    first_page: 1,
+    per_page: 20,
+    total: 2,
+    from: 1,
+    to: 2,
+};
+
 const mockCategories: CategoryFlat[] = [
     {
         id: 1,
@@ -85,7 +97,7 @@ const mockCategories: CategoryFlat[] = [
     },
 ];
 
-const mountProducts = (data: Product[] | undefined = undefined, isLoading = false) => {
+const mountProducts = (data: PaginationResult<Product> | undefined = undefined, isLoading = false) => {
     vi.mocked(useProducts).mockReturnValue({
         data: ref(data),
         isLoading: ref(isLoading),
@@ -136,13 +148,13 @@ describe("vendor products.vue", () => {
     });
 
     it("renders products when data is available", () => {
-        const wrapper = mountProducts(mockProducts);
+        const wrapper = mountProducts(mockPagination);
         expect(wrapper.text()).toContain("RTX 5070");
         expect(wrapper.text()).toContain("MacBook Pro");
     });
 
     it("renders product details in the table", () => {
-        const wrapper = mountProducts(mockProducts);
+        const wrapper = mountProducts(mockPagination);
         expect(wrapper.text()).toContain("1");
         expect(wrapper.text()).toContain("2");
         expect(wrapper.text()).toContain("3299.99");
@@ -153,7 +165,7 @@ describe("vendor products.vue", () => {
     });
 
     it("renders table headers without vendor column", () => {
-        const wrapper = mountProducts(mockProducts);
+        const wrapper = mountProducts(mockPagination);
         expect(wrapper.text()).toContain("A list of products");
         expect(wrapper.text()).toContain("ID");
         expect(wrapper.text()).not.toContain("Vendor ID");
@@ -168,36 +180,34 @@ describe("vendor products.vue", () => {
         expect(wrapper.text()).toContain("Updated at");
     });
 
-    it("filters products by name", async () => {
-        const wrapper = mountProducts(mockProducts);
-        const searchInput = wrapper.find("input");
-        await searchInput.setValue("rtx");
-        expect(wrapper.text()).toContain("RTX 5070");
-        expect(wrapper.text()).not.toContain("MacBook Pro");
+    it("renders pagination for the product list", () => {
+        const wrapper = mountProducts(mockPagination);
+        expect(wrapper.text()).toContain("Previous");
+        expect(wrapper.text()).toContain("Next");
     });
 
     it("renders an edit, delete, and add button", () => {
-        const wrapper = mountProducts(mockProducts);
-        expect(wrapper.findAll("button").length).toBe(5);
+        const wrapper = mountProducts(mockPagination);
+        expect(wrapper.findAll("button").length).toBe(8);
     });
 
     it("opens the edit dialog with the correct product id", async () => {
-        const wrapper = mountProducts(mockProducts);
-        const content = await openDialog(wrapper, 1);
+        const wrapper = mountProducts(mockPagination);
+        const content = await openDialog(wrapper, 4);
         expect(content).toBeTruthy();
         expect(content!.textContent).toContain("Edit Product of ID 1");
     });
 
     it("prefills the form with the product name", async () => {
-        const wrapper = mountProducts(mockProducts);
-        await openDialog(wrapper, 1);
+        const wrapper = mountProducts(mockPagination);
+        await openDialog(wrapper, 4);
         const nameInput = document.body.querySelector<HTMLInputElement>("#name");
         expect(nameInput!.value).toBe("RTX 5070");
     });
 
     it("submits the edit form with updated values", async () => {
-        const wrapper = mountProducts(mockProducts);
-        await openDialog(wrapper, 1);
+        const wrapper = mountProducts(mockPagination);
+        await openDialog(wrapper, 4);
         setDialogInput("name", "RTX 5090");
         setDialogInput("price", "199.99");
         submitDialogForm();
@@ -210,8 +220,8 @@ describe("vendor products.vue", () => {
     });
 
     it("does not submit when the quantity is negative", async () => {
-        const wrapper = mountProducts(mockProducts);
-        const content = await openDialog(wrapper, 1);
+        const wrapper = mountProducts(mockPagination);
+        const content = await openDialog(wrapper, 4);
         setDialogInput("quantity", "-1");
         submitDialogForm();
         await flush();
@@ -221,14 +231,14 @@ describe("vendor products.vue", () => {
     });
 
     it("opens the delete dialog with the correct product id", async () => {
-        const wrapper = mountProducts(mockProducts);
-        const content = await openDialog(wrapper, 2);
+        const wrapper = mountProducts(mockPagination);
+        const content = await openDialog(wrapper, 5);
         expect(content!.textContent).toContain("Deletion of product of ID 1");
     });
 
     it("calls the delete mutation when Yes is clicked", async () => {
-        const wrapper = mountProducts(mockProducts);
-        await openDialog(wrapper, 2);
+        const wrapper = mountProducts(mockPagination);
+        await openDialog(wrapper, 5);
         const content = document.body.querySelector<HTMLElement>('[data-slot="dialog-content"]')!;
         const button = Array.from(content.querySelectorAll("button")).find(
             (b) => b.textContent === "Yes",
@@ -241,15 +251,15 @@ describe("vendor products.vue", () => {
     });
 
     it("opens the add product dialog", async () => {
-        const wrapper = mountProducts(mockProducts);
-        const content = await openDialog(wrapper, 0);
+        const wrapper = mountProducts(mockPagination);
+        const content = await openDialog(wrapper, 3);
         expect(content).toBeTruthy();
         expect(content!.textContent).toContain("Add Product");
     });
 
     it("submits the add form with valid values without vendor_id", async () => {
-        const wrapper = mountProducts(mockProducts);
-        await openDialog(wrapper, 0);
+        const wrapper = mountProducts(mockPagination);
+        await openDialog(wrapper, 3);
 
         (wrapper.vm as any).addName = "New GPU";
         (wrapper.vm as any).addDescription = "A new graphics card";
@@ -277,8 +287,8 @@ describe("vendor products.vue", () => {
     });
 
     it("does not submit when no category is selected", async () => {
-        const wrapper = mountProducts(mockProducts);
-        const content = await openDialog(wrapper, 0);
+        const wrapper = mountProducts(mockPagination);
+        const content = await openDialog(wrapper, 3);
 
         (wrapper.vm as any).addName = "New GPU";
         (wrapper.vm as any).addDescription = "A new graphics card";
@@ -293,8 +303,8 @@ describe("vendor products.vue", () => {
     });
 
     it("does not submit when required add fields are missing", async () => {
-        const wrapper = mountProducts(mockProducts);
-        const content = await openDialog(wrapper, 0);
+        const wrapper = mountProducts(mockPagination);
+        const content = await openDialog(wrapper, 3);
 
         submitDialogForm();
         await flush();
@@ -305,8 +315,8 @@ describe("vendor products.vue", () => {
     });
 
     it("does not submit when the add quantity is negative", async () => {
-        const wrapper = mountProducts(mockProducts);
-        const content = await openDialog(wrapper, 0);
+        const wrapper = mountProducts(mockPagination);
+        const content = await openDialog(wrapper, 3);
 
         (wrapper.vm as any).addName = "New GPU";
         (wrapper.vm as any).addDescription = "A new graphics card";
@@ -321,8 +331,8 @@ describe("vendor products.vue", () => {
     });
 
     it("does not submit when the image file is too large", async () => {
-        const wrapper = mountProducts(mockProducts);
-        const content = await openDialog(wrapper, 0);
+        const wrapper = mountProducts(mockPagination);
+        const content = await openDialog(wrapper, 3);
 
         (wrapper.vm as any).addName = "New GPU";
         (wrapper.vm as any).addDescription = "A new graphics card";
@@ -337,8 +347,8 @@ describe("vendor products.vue", () => {
     });
 
     it("does not submit when the image type is not supported", async () => {
-        const wrapper = mountProducts(mockProducts);
-        const content = await openDialog(wrapper, 0);
+        const wrapper = mountProducts(mockPagination);
+        const content = await openDialog(wrapper, 3);
 
         (wrapper.vm as any).addName = "New GPU";
         (wrapper.vm as any).addDescription = "A new graphics card";
