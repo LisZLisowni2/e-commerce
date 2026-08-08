@@ -32,9 +32,6 @@ import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/in
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCategoriesFlat } from "@/composables/useCategories";
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5 MB
-const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
-
 const categorySchema = z.object({
     name: z.string().optional(),
     parent_id: z.coerce.number().positive().nullable().optional(),

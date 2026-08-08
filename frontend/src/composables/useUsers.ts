@@ -4,12 +4,14 @@ import type { User } from "@/types/User";
 import type { PaginationResult } from "@/types/PaginationResult";
 import { unref, type Ref } from "vue";
 
-export function useUsers(page: Ref<number> | number) {
+export function useUsers(page: Ref<number> | number, query: Ref<string> | string = "") {
     return useQuery({
-        queryKey: ['users', page],
+        queryKey: ['users', page, query],
         queryFn: async () => {
             const currentPage = unref(page)
-            const { data } = await api.get<{ users: PaginationResult<User> }>(`/users?paginated=true&page=${currentPage}`)
+            const searchQuery = unref(query)
+
+            const { data } = await api.get<{ users: PaginationResult<User> }>(`/users?paginated=true&page=${currentPage}&search_query=${searchQuery}`)
 
             return data
         },
@@ -18,11 +20,12 @@ export function useUsers(page: Ref<number> | number) {
     })
 }
 
-export function useUsersNotPaginate() {
+export function useUsersNotPaginate(query: Ref<string> | string = "") {
     return useQuery({
-        queryKey: ['users -1'],
+        queryKey: ['users -1', query],
         queryFn: async () => {
-            const { data } = await api.get<{ users: User[] }>(`/users?paginated=false`)
+            const searchQuery = unref(query)
+            const { data } = await api.get<{ users: User[] }>(`/users?paginated=false&search_query=${searchQuery}`)
 
             return data
         },

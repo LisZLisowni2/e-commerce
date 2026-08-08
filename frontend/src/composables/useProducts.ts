@@ -23,17 +23,17 @@ export function useProducts(options: UseProductsOptions) {
         queryFn: async () => {
             const vendorId = toValue(options?.vendorId);
             const searchQuery = toValue(options?.searchQuery);
+            const page = unref(options.page)
 
             const params = new URLSearchParams();
             if (vendorId) {
                 params.set("vendor_id", String(vendorId));
             } else if (searchQuery) {
                 params.set("search_query", searchQuery);
-            } else if (options?.page) {
-                params.set("paginated", String(true))
-                const currentPage = unref(options.page)
-                params.set("page", String(currentPage))
-            }
+            } 
+
+            params.set("paginated", String(true))
+            params.set("page", String(page))
 
             const queryString = params.toString();
             const url = queryString ? `/products?${queryString}` : "/products";

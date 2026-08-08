@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use DB;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -15,11 +16,22 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
+        $users = User::query()
+            ->when($request->filled("search_query"), function ($query) use ($request) {
+                    $term = $request->string('search_query')->replace(['%', '_'], ['\\%', '\\_']);
+
+                    if (DB::getDriverName() === 'pgsql') {
+                        return $query->where('email', 'ILIKE', "%{$term}%");
+                    }
+
+                    return $query->whereRaw("email LIKE ? ESCAPE '\\'", ["%{$term}%"]);
+                });
+
         if ($request->boolean('paginated')) {
-            return response()->json(["users" => User::query()->paginate(20)]);
+            return response()->json(["users" => $users->paginate(20)]);
         }
 
-        return response()->json(["users" => User::all()]);
+        return response()->json(["users" => $users->get()]);
     }
 
     /**

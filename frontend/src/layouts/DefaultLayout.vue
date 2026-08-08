@@ -16,14 +16,14 @@ import {
     NavigationMenuTrigger,
     navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import IconDropdown from "@/components/navigation/IconDropdown.vue";
 import {
     CircleUserRound,
     Phone,
     ShoppingBasket,
 } from "lucide-vue-next";
-import { useProducts, useProductsNotPagination } from "@/composables/useProducts";
+import { useProductsNotPagination } from "@/composables/useProducts";
 import {
     Dialog,
     DialogContent,

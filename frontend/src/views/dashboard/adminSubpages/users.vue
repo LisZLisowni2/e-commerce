@@ -56,6 +56,7 @@ import {
     PaginationNext,
     PaginationEllipsis,
 } from "@/components/ui/pagination";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 
 const userSchema = z.object({
     email: z.string().email(),
@@ -211,7 +212,8 @@ const onDelete = (userID: number) => {
 
 const currentPage = ref<number>(1);
 
-const { data, isLoading, isError, error } = useUsers(currentPage);
+const query = ref("")
+const { data, isLoading, isError, error } = useUsers(currentPage, query);
 
 </script>
 
@@ -220,6 +222,12 @@ const { data, isLoading, isError, error } = useUsers(currentPage);
     <h1 v-else-if="isError" class="text-red-500">{{ error }}</h1>
     <div v-else>
         <div class="flex items-center justify-between">
+            <InputGroup>
+                <InputGroupInput v-model="query" placeholder="Search products..." />
+                <InputGroupAddon>
+                    <Search />
+                </InputGroupAddon>
+            </InputGroup>
             <Pagination
                 v-model:page="currentPage"
                 :items-per-page="data?.users.per_page ?? 20"

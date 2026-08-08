@@ -27,12 +27,12 @@ import { useForm } from "vee-validate";
 import { toTypedSchema } from "@vee-validate/zod";
 import { useMutation, useQueryClient } from "@tanstack/vue-query";
 import api from "@/api";
-import { computed, ref } from "vue";
+import { ref } from "vue";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useCategories, useCategoriesFlat } from "@/composables/useCategories";
+import { useCategoriesFlat } from "@/composables/useCategories";
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 
 const authStore = useAuthStore();
@@ -182,8 +182,9 @@ const onDelete = (productID: number) => {
 }
 
 const currentPage = ref(1)
+const query = ref("")
 
-const { data, isLoading } = useProducts({ vendorId: authStore.user?.id, page: currentPage });
+const { data, isLoading } = useProducts({ searchQuery: query, vendorId: authStore.user?.id, page: currentPage });
 const { data: categoryData } = useCategoriesFlat();
 
 function handleFileChangesAdd(event: Event) {
@@ -204,6 +205,12 @@ function handleFileChanges(event: Event) {
     <h1 v-if="isLoading">Loading...</h1>
     <div v-else>
         <div class="flex items-center justify-between">
+            <InputGroup>
+                <InputGroupInput v-model="query" placeholder="Search products..." />
+                <InputGroupAddon>
+                    <Search />
+                </InputGroupAddon>
+            </InputGroup>
             <Pagination
                 v-model:page="currentPage"
                 :items-per-page="data?.per_page ?? 20"

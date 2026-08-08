@@ -195,8 +195,9 @@ const onDelete = (productID: number) => {
 }
 
 const currentPage = ref(1)
+const query = ref("")
 
-const { data, isLoading } = useProducts({ page: currentPage });
+const { data, isLoading } = useProducts({ searchQuery: query, page: currentPage });
 const { data: usersData } = useUsersNotPaginate();
 const { data: categoryData } = useCategoriesFlat();
 
@@ -222,6 +223,12 @@ function handleFileChanges(event: Event) {
     <h1 v-if="isLoading">Loading...</h1>
     <div v-else>
         <div class="flex items-center justify-between">
+            <InputGroup>
+                <InputGroupInput v-model="query" placeholder="Search products..." />
+                <InputGroupAddon>
+                    <Search />
+                </InputGroupAddon>
+            </InputGroup>
             <Pagination
                 v-model:page="currentPage"
                 :items-per-page="data?.per_page ?? 20"
