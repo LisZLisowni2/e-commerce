@@ -56,12 +56,6 @@ import {
 const query = ref("")
 const { data: products } = useProductsNotPagination({ searchQuery: query })
 
-const queryResults = computed(() => {
-    if (query.value === "") return []
-
-    return products.value
-})
-
 const authStore = useAuthStore();
 
 onMounted(async () => {
@@ -81,14 +75,14 @@ function extractSubcategories(categories: Category[]): NavItem[] {
             return {
                 index: category.id,
                 name: category.name,
-                link: `/${category.slug}`,
+                link: `/search?category=${category.slug}`,
                 subnames: extractSubcategories(category.children_recursive),
             };
         } else {
             return {
                 index: category.id,
                 name: category.name,
-                link: `/${category.slug}`,
+                link: `/search?category=${category.slug}`,
                 subnames: [],
             };
         }
@@ -191,10 +185,10 @@ const onLogoutSubmit = () => {
                     v-model="query"
                 />
                 
-                <CommandList v-if="query.trim().length > 0" class="absolute top-full left-0 right-0 mt-1 z-50 min-h-40 rounded-md border border-zinc-800 bg-zinc-950 shadow-xl">
+                <CommandList v-if="query.length > 0" class="absolute top-full left-0 right-0 mt-1 z-50 min-h-40 rounded-md border border-zinc-800 bg-zinc-950 shadow-xl">
                     <CommandEmpty>No result found</CommandEmpty>
                     <CommandGroup heading="Results">
-                        <CommandItem v-for="product in queryResults" :value="product.id">
+                        <CommandItem v-for="product in products" :value="product.id">
                             {{ product.name }}
                         </CommandItem>
                     </CommandGroup>

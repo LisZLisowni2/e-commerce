@@ -71,6 +71,7 @@ export function useProductsNotPagination(options: Omit<UseProductsOptions, 'page
             const url = queryString ? `/products?${queryString}` : "/products";
 
             const { data } = await api.get<{ products: Product[] }>(url);
+
             return data.products;
         },
         placeholderData: keepPreviousData,

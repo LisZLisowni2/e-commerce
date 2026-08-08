@@ -56,6 +56,93 @@ test('admin can list paginated users', function () {
     expect(count($page2->json('users.data')))->toBe(6);
 });
 
+test('admin can search users by email', function () {
+    $admin = User::factory()->create([
+        'scope' => ScopeEnum::ADMIN,
+        'email' => 'admin@example.com',
+    ]);
+
+    User::factory()->create(['email' => 'rtx@gaming.com']);
+    User::factory()->create(['email' => 'macbook@example.com']);
+    User::factory()->create(['email' => 'laptop@example.com']);
+
+    $response = $this->actingAs($admin)->getJson('/api/users?search_query=rtx');
+
+    $response->assertStatus(200);
+    expect($response->json('users'))->toHaveCount(1);
+    expect($response->json('users.0.email'))->toBe('rtx@gaming.com');
+});
+
+test('paginated users can be filtered by search query', function () {
+    $admin = User::factory()->create([
+        'scope' => ScopeEnum::ADMIN,
+        'email' => 'admin@example.com',
+    ]);
+
+    foreach (range(1, 21) as $i) {
+        User::factory()->create(['email' => "macbook{$i}@example.com"]);
+    }
+    User::factory()->create(['email' => 'rtx@gaming.com']);
+
+    $response = $this->actingAs($admin)->getJson('/api/users?search_query=macbook&paginated=true');
+
+    $response->assertStatus(200);
+    $response->assertJsonPath('users.total', 21);
+    expect(count($response->json('users.data')))->toBe(20);
+});
+
+test('user search query is case-insensitive', function () {
+    $admin = User::factory()->create([
+        'scope' => ScopeEnum::ADMIN,
+        'email' => 'admin@example.com',
+    ]);
+
+    User::factory()->create(['email' => 'RTX@GAMING.COM']);
+    User::factory()->create(['email' => 'macbook@example.com']);
+
+    $response = $this->actingAs($admin)->getJson('/api/users?search_query=rtx');
+
+    $response->assertStatus(200);
+    expect($response->json('users'))->toHaveCount(1);
+    expect($response->json('users.0.email'))->toBe('RTX@GAMING.COM');
+});
+
+test('user search query returns an empty list when nothing matches', function () {
+    $admin = User::factory()->create([
+        'scope' => ScopeEnum::ADMIN,
+        'email' => 'admin@example.com',
+    ]);
+
+    User::factory()->create(['email' => 'rtx@gaming.com']);
+
+    $response = $this->actingAs($admin)->getJson('/api/users?search_query=nonexistent');
+
+    $response->assertStatus(200);
+    expect($response->json('users'))->toHaveCount(0);
+});
+
+test('user search query treats % and _ as literal characters', function () {
+    $admin = User::factory()->create([
+        'scope' => ScopeEnum::ADMIN,
+        'email' => 'admin@example.com',
+    ]);
+
+    User::factory()->create(['email' => '100%cash@example.com']);
+    User::factory()->create(['email' => '100percentcash@example.com']);
+    User::factory()->create(['email' => 'gaming_ultra@example.com']);
+    User::factory()->create(['email' => 'gamingultra@example.com']);
+
+    $response = $this->actingAs($admin)->getJson('/api/users?search_query=100%25');
+    $response->assertStatus(200);
+    expect($response->json('users'))->toHaveCount(1);
+    expect($response->json('users.0.email'))->toBe('100%cash@example.com');
+
+    $response = $this->actingAs($admin)->getJson('/api/users?search_query=gaming_ultra');
+    $response->assertStatus(200);
+    expect($response->json('users'))->toHaveCount(1);
+    expect($response->json('users.0.email'))->toBe('gaming_ultra@example.com');
+});
+
 test('superadmin can list users', function () {
     $superadmin = User::factory()->create([
         'scope' => ScopeEnum::SUPERADMIN,

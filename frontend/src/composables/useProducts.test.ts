@@ -193,7 +193,7 @@ describe("useProducts", () => {
 
         await queryFn!();
 
-        expect(api.get).toHaveBeenCalledWith("/products?vendor_id=7");
+        expect(api.get).toHaveBeenCalledWith("/products?vendor_id=7&paginated=true&page=1");
     });
 
     it("fetches products matching the search query from /products?search_query", async () => {
@@ -214,7 +214,7 @@ describe("useProducts", () => {
 
         await queryFn!();
 
-        expect(api.get).toHaveBeenCalledWith("/products?search_query=rtx");
+        expect(api.get).toHaveBeenCalledWith("/products?search_query=rtx&paginated=true&page=1");
     });
 
     it("fetches the latest search query when searchQuery changes reactively", async () => {
@@ -237,7 +237,7 @@ describe("useProducts", () => {
 
         await queryFn!();
 
-        expect(api.get).toHaveBeenCalledWith("/products?search_query=rtx");
+        expect(api.get).toHaveBeenCalledWith("/products?search_query=rtx&paginated=true&page=1");
     });
 
     it("URL-encodes the search query", async () => {
@@ -261,8 +261,52 @@ describe("useProducts", () => {
         await queryFn!();
 
         expect(api.get).toHaveBeenCalledWith(
-            "/products?search_query=rtx+5070+%26+more",
+            "/products?search_query=rtx+5070+%26+more&paginated=true&page=1",
         );
+    });
+
+    it("sends vendor_id over search_query when both are provided", async () => {
+        let queryFn: () => Promise<any>;
+
+        vi.mocked(useQuery).mockImplementation((opts: any) => {
+            queryFn = opts.queryFn;
+            return {
+                data: undefined,
+                isLoading: true,
+                error: null,
+            } as any;
+        });
+
+        useProducts({ vendorId: 7, searchQuery: "rtx", page: 2 });
+
+        vi.mocked(api.get).mockResolvedValue({ data: { products: mockProducts } });
+
+        await queryFn!();
+
+        expect(api.get).toHaveBeenCalledWith("/products?vendor_id=7&paginated=true&page=2");
+    });
+
+    it("reacts to page changes when filtering by search query", async () => {
+        let queryFn: () => Promise<any>;
+        const page = ref(1);
+
+        vi.mocked(useQuery).mockImplementation((opts: any) => {
+            queryFn = opts.queryFn;
+            return {
+                data: undefined,
+                isLoading: true,
+                error: null,
+            } as any;
+        });
+
+        useProducts({ searchQuery: "rtx", page });
+
+        page.value = 4;
+        vi.mocked(api.get).mockResolvedValue({ data: { products: mockProducts } });
+
+        await queryFn!();
+
+        expect(api.get).toHaveBeenCalledWith("/products?search_query=rtx&paginated=true&page=4");
     });
 
     it("returns the products array from a vendor response", async () => {

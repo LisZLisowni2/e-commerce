@@ -64,7 +64,7 @@ describe("useUsers", () => {
         const page = ref(2);
         useUsers(page);
 
-        expect(opts.queryKey).toEqual(["users", page]);
+        expect(opts.queryKey).toEqual(["users", page, ""]);
         expect(opts.queryFn).toBeTypeOf("function");
     });
 
@@ -86,7 +86,7 @@ describe("useUsers", () => {
 
         const result = await queryFn!();
 
-        expect(api.get).toHaveBeenCalledWith("/users?paginated=true&page=3");
+        expect(api.get).toHaveBeenCalledWith("/users?paginated=true&page=3&search_query=");
         expect(result).toEqual({ users: mockPagination });
     });
 
@@ -110,7 +110,94 @@ describe("useUsers", () => {
 
         await queryFn!();
 
-        expect(api.get).toHaveBeenCalledWith("/users?paginated=true&page=5");
+        expect(api.get).toHaveBeenCalledWith("/users?paginated=true&page=5&search_query=");
+    });
+
+    it("includes the search query in the query key", () => {
+        let opts: { queryKey?: unknown; queryFn?: unknown } = {};
+
+        vi.mocked(useQuery).mockImplementation((o: any) => {
+            opts = o;
+            return {
+                data: undefined,
+                isLoading: true,
+                error: null,
+            } as any;
+        });
+
+        const page = ref(1);
+        const query = ref("alice");
+        useUsers(page, query);
+
+        expect(opts.queryKey).toEqual(["users", page, query]);
+        expect(opts.queryFn).toBeTypeOf("function");
+    });
+
+    it("reacts to changes in the reactive search query", () => {
+        let opts: { queryKey?: unknown; queryFn?: unknown } = {};
+
+        vi.mocked(useQuery).mockImplementation((o: any) => {
+            opts = o;
+            return {
+                data: undefined,
+                isLoading: true,
+                error: null,
+            } as any;
+        });
+
+        const page = ref(1);
+        const query = ref("");
+        useUsers(page, query);
+
+        expect(opts.queryKey).toEqual(["users", page, query]);
+
+        query.value = "alice";
+        expect(opts.queryKey).toEqual(["users", page, query]);
+    });
+
+    it("fetches paginated users filtered by the search query", async () => {
+        let queryFn: () => Promise<any>;
+
+        vi.mocked(useQuery).mockImplementation((opts: any) => {
+            queryFn = opts.queryFn;
+            return {
+                data: undefined,
+                isLoading: true,
+                error: null,
+            } as any;
+        });
+
+        useUsers(2, "alice");
+
+        vi.mocked(api.get).mockResolvedValue({ data: { users: mockPagination } });
+
+        const result = await queryFn!();
+
+        expect(api.get).toHaveBeenCalledWith("/users?paginated=true&page=2&search_query=alice");
+        expect(result).toEqual({ users: mockPagination });
+    });
+
+    it("fetches the latest search query when it changes reactively", async () => {
+        let queryFn: () => Promise<any>;
+        const query = ref("");
+
+        vi.mocked(useQuery).mockImplementation((opts: any) => {
+            queryFn = opts.queryFn;
+            return {
+                data: undefined,
+                isLoading: true,
+                error: null,
+            } as any;
+        });
+
+        useUsers(1, query);
+
+        query.value = "bob";
+        vi.mocked(api.get).mockResolvedValue({ data: { users: mockPagination } });
+
+        await queryFn!();
+
+        expect(api.get).toHaveBeenCalledWith("/users?paginated=true&page=1&search_query=bob");
     });
 
     it("propagates API errors", async () => {
@@ -152,7 +239,7 @@ describe("useUsersNotPaginate", () => {
 
         useUsersNotPaginate();
 
-        expect(opts.queryKey).toEqual(["users -1"]);
+        expect(opts.queryKey).toEqual(["users -1", ""]);
         expect(opts.queryFn).toBeTypeOf("function");
     });
 
@@ -174,7 +261,48 @@ describe("useUsersNotPaginate", () => {
 
         const result = await queryFn!();
 
-        expect(api.get).toHaveBeenCalledWith("/users?paginated=false");
+        expect(api.get).toHaveBeenCalledWith("/users?paginated=false&search_query=");
+        expect(result).toEqual({ users: mockUsers });
+    });
+
+    it("includes the search query in the non-pagination query key", () => {
+        let opts: { queryKey?: unknown; queryFn?: unknown } = {};
+
+        vi.mocked(useQuery).mockImplementation((o: any) => {
+            opts = o;
+            return {
+                data: undefined,
+                isLoading: true,
+                error: null,
+            } as any;
+        });
+
+        const query = ref("alice");
+        useUsersNotPaginate(query);
+
+        expect(opts.queryKey).toEqual(["users -1", query]);
+        expect(opts.queryFn).toBeTypeOf("function");
+    });
+
+    it("fetches users filtered by the search query", async () => {
+        let queryFn: () => Promise<any>;
+
+        vi.mocked(useQuery).mockImplementation((opts: any) => {
+            queryFn = opts.queryFn;
+            return {
+                data: undefined,
+                isLoading: true,
+                error: null,
+            } as any;
+        });
+
+        useUsersNotPaginate("bob");
+
+        vi.mocked(api.get).mockResolvedValue({ data: { users: mockUsers } });
+
+        const result = await queryFn!();
+
+        expect(api.get).toHaveBeenCalledWith("/users?paginated=false&search_query=bob");
         expect(result).toEqual({ users: mockUsers });
     });
 
