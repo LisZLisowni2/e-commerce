@@ -7,6 +7,7 @@ import type { PaginationResult } from "@/types/PaginationResult";
 interface UseProductsOptions {
     vendorId?: MaybeRefOrGetter<number | undefined>,
     searchQuery?: MaybeRefOrGetter<string | undefined>,
+    category?: MaybeRefOrGetter<string | undefined>,
     page: Ref<number> | number,
 }
 
@@ -15,6 +16,7 @@ export function useProducts(options: UseProductsOptions) {
         "products",
         toValue(options?.vendorId),
         toValue(options?.searchQuery),
+        toValue(options?.category),
         toValue(options.page)
     ]);
 
@@ -23,14 +25,19 @@ export function useProducts(options: UseProductsOptions) {
         queryFn: async () => {
             const vendorId = toValue(options?.vendorId);
             const searchQuery = toValue(options?.searchQuery);
+            const category = toValue(options?.category);
             const page = unref(options.page)
 
             const params = new URLSearchParams();
             if (vendorId) {
                 params.set("vendor_id", String(vendorId));
-            } else if (searchQuery) {
-                params.set("search_query", searchQuery);
             } 
+            
+            if (searchQuery) {
+                params.set("search_query", searchQuery);
+            } else if (category) {
+                params.set("category", category)
+            }
 
             params.set("paginated", String(true))
             params.set("page", String(page))
@@ -51,6 +58,7 @@ export function useProductsNotPagination(options: Omit<UseProductsOptions, 'page
         "products",
         toValue(options?.vendorId),
         toValue(options?.searchQuery),
+        toValue(options?.category),
         " -1"
     ]);
 
@@ -59,12 +67,17 @@ export function useProductsNotPagination(options: Omit<UseProductsOptions, 'page
         queryFn: async () => {
             const vendorId = toValue(options?.vendorId);
             const searchQuery = toValue(options?.searchQuery);
+            const category = toValue(options?.category)
 
             const params = new URLSearchParams();
             if (vendorId) {
                 params.set("vendor_id", String(vendorId));
-            } else if (searchQuery) {
+            } 
+            
+            if (searchQuery) {
                 params.set("search_query", searchQuery);
+            } else if (category) {
+                params.set("category", category)
             }
             
             const queryString = params.toString();

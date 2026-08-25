@@ -20,6 +20,16 @@ const routes: RouteRecordRaw[] = [
         component: () => import("@/views/registerPage.vue"),
     },
     {
+        path: "/search/category/:category",
+        name: "searchByCategory",
+        component: () => import("@/views/search.vue"),
+    },
+    {
+        path: "/search/query/:query",
+        name: "searchByQuery",
+        component: () => import("@/views/search.vue"),
+    },
+    {
         path: "/admin/dashboard",
         name: "adminDashboard",
         component: () => import("@/views/dashboard/adminDashboard.vue"),

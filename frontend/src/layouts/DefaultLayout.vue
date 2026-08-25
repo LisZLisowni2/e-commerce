@@ -75,14 +75,14 @@ function extractSubcategories(categories: Category[]): NavItem[] {
             return {
                 index: category.id,
                 name: category.name,
-                link: `/search?category=${category.slug}`,
+                link: `/search/category/${category.slug}`,
                 subnames: extractSubcategories(category.children_recursive),
             };
         } else {
             return {
                 index: category.id,
                 name: category.name,
-                link: `/search?category=${category.slug}`,
+                link: `/search/category/${category.slug}`,
                 subnames: [],
             };
         }
@@ -380,9 +380,7 @@ const onLogoutSubmit = () => {
                     <!-- If item has subnames, render Trigger + Content panel -->
                     <template v-if="item.subnames && item.subnames.length > 0">
                         <NavigationMenuTrigger>
-                            <RouterLink :to="item.link">
-                                {{ item.name }}
-                            </RouterLink>
+                            {{ item.name }}
                         </NavigationMenuTrigger>
 
                         <NavigationMenuContent>

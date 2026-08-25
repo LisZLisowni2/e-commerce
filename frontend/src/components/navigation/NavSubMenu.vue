@@ -12,12 +12,7 @@ defineProps<{
         <li v-for="subitem in items" :key="subitem.index" class="py-1">
             <!-- Case 1: Item HAS sub-items (Recursive Step) -->
             <div v-if="subitem.subnames && subitem.subnames.length > 0">
-                <a
-                    :href="subitem.link || '#'"
-                    class="text-xs font-semibold uppercase tracking-wider text-muted-foreground p-2 hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
-                >
-                    {{ subitem.name }}
-                </a>
+                {{ subitem.name }}
                 <!-- Recursive call -->
                 <NavSubMenu :items="subitem.subnames" />
             </div>

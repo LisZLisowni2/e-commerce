@@ -25,7 +25,12 @@ class ProductController extends Controller
 
                     return $query->whereRaw("name LIKE ? ESCAPE '\\'", ["%{$term}%"]);
                 })
-                ->latest();
+                ->when($request->filled('category'), fn ($query) => 
+                    $query
+                        ->join('categories', 'categories.id', '=', 'products.category_id')
+                        ->where('categories.slug', '=', $request->string('category'))
+                )
+                ->latest('products.created_at');
     
         if ($request->boolean('paginated')) {
             return response()->json(["products" =>
