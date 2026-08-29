@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 class Address extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         "address_type",
         "address_line_1",
@@ -19,7 +20,8 @@ class Address extends Model
         "country",
     ];
 
-    protected function casts(): array {
+    protected function casts(): array
+    {
         return [
             "address_type" => AddressType::class
         ];

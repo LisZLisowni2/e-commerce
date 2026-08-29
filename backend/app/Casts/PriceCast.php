@@ -5,8 +5,6 @@ namespace App\Casts;
 use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Database\Eloquent\Model;
 
-use function Laravel\Prompts\number;
-
 class PriceCast implements CastsAttributes
 {
     /**

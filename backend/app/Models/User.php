@@ -6,8 +6,6 @@ namespace App\Models;
 
 use App\AddressType;
 use App\ScopeEnum;
-use Database\Factories\UserFactory;
-use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -19,7 +17,11 @@ use Laravel\Sanctum\HasApiTokens;
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens;
+
+    use HasFactory;
+
+    use Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -81,7 +83,7 @@ class User extends Authenticatable
             ->limit(1);
     }
 
-    /* 
+    /*
         Get the user's products
     */
     public function products(): HasMany
@@ -89,7 +91,8 @@ class User extends Authenticatable
         return $this->hasMany(Product::class);
     }
 
-    public function hasScope(ScopeEnum ...$scopes) {
+    public function hasScope(ScopeEnum ...$scopes)
+    {
         return in_array($this->scope, $scopes, true);
     }
 }

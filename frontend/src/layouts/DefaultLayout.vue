@@ -44,7 +44,7 @@ import { useCategories } from "@/composables/useCategories";
 import type { Category } from "@/types/Category";
 import type { NavItem } from "@/types/NavItem";
 import NavSubMenu from "@/components/navigation/NavSubMenu.vue";
-import { 
+import {
     Command,
     CommandInput,
     CommandList,
@@ -163,33 +163,33 @@ const onLogoutSubmit = () => {
 <template>
     <header class="flex max-md:flex-col items-center w-full gap-4 px-4 py-2">
         <div class="flex flex-row max-md:flex-col items-center gap-4 shrink-0">
-            <RouterLink to="/"
-                ><h1 class="text-xl sm:text-3xl text-amber-500">
+            <RouterLink to="/">
+                <h1 class="text-xl sm:text-3xl text-amber-500">
                     E-commerce
-                </h1></RouterLink
-            >
-            <Button
-                @click="
-                    themeStore.mode === 'light'
-                        ? (themeStore.mode = 'dark')
-                        : (themeStore.mode = 'light')
-                "
-            >
+                </h1>
+            </RouterLink>
+            <Button @click="
+                themeStore.mode === 'light'
+                    ? (themeStore.mode = 'dark')
+                    : (themeStore.mode = 'light')
+                ">
                 Theme
             </Button>
         </div>
         <div class="relative w-full z-50">
             <Command class="z-50 rounded-lg border border-zinc-800">
-                <CommandInput 
-                    placeholder="Search..."
-                    v-model="query"
-                />
-                
-                <CommandList v-if="query.length > 0" class="absolute top-full left-0 right-0 mt-1 z-50 min-h-40 rounded-md border border-zinc-800 bg-zinc-950 shadow-xl">
+                <form @submit.prevent="router.push(`/search/query/${query}`)">
+                    <CommandInput placeholder="Search..." v-model="query" />
+                </form>
+
+                <CommandList v-if="query.length > 0"
+                    class="absolute top-full left-0 right-0 mt-1 z-50 min-h-40 rounded-md border border-zinc-800 bg-zinc-950 shadow-xl">
                     <CommandEmpty>No result found</CommandEmpty>
                     <CommandGroup heading="Results">
                         <CommandItem v-for="product in products" :value="product.id">
-                            {{ product.name }}
+                            <RouterLink :to="`/product/${product.id}`">
+                                {{ product.name }}
+                            </RouterLink>
                         </CommandItem>
                     </CommandGroup>
                 </CommandList>
@@ -227,53 +227,23 @@ const onLogoutSubmit = () => {
                                     <div class="grid gap-4 p-3">
                                         <FormField>
                                             <Label for="email-1">Email</Label>
-                                            <Input
-                                                id="email-1"
-                                                v-model="email"
-                                                name="email"
-                                                type="email"
-                                            />
-                                            <span
-                                                class="text-red-500"
-                                                v-if="errors.email"
-                                                >{{ errors.email }}</span
-                                            >
+                                            <Input id="email-1" v-model="email" name="email" type="email" />
+                                            <span class="text-red-500" v-if="errors.email">{{ errors.email }}</span>
                                         </FormField>
                                         <FormField>
-                                            <Label for="password-1"
-                                                >Password</Label
-                                            >
-                                            <Input
-                                                id="password-1"
-                                                v-model="password"
-                                                name="password"
-                                                type="password"
-                                            />
-                                            <span
-                                                class="text-red-500"
-                                                v-if="errors.password"
-                                                >{{ errors.password }}</span
-                                            >
-                                            <span
-                                                class="text-red-500"
-                                                v-if="isError"
-                                                >{{ error }}</span
-                                            >
+                                            <Label for="password-1">Password</Label>
+                                            <Input id="password-1" v-model="password" name="password" type="password" />
+                                            <span class="text-red-500" v-if="errors.password">{{ errors.password
+                                                }}</span>
+                                            <span class="text-red-500" v-if="isError">{{ error }}</span>
                                         </FormField>
                                     </div>
                                     <DialogFooter>
-                                        <Button type="submit" v-if="!isPending"
-                                            >Login</Button
-                                        >
-                                        <Button v-else variant="ghost"
-                                            >Login</Button
-                                        >
+                                        <Button type="submit" v-if="!isPending">Login</Button>
+                                        <Button v-else variant="ghost">Login</Button>
                                         <DialogClose as-child>
-                                            <RouterLink to="/register"
-                                                ><Button variant="outline"
-                                                    >Register</Button
-                                                ></RouterLink
-                                            >
+                                            <RouterLink to="/register"><Button variant="outline">Register</Button>
+                                            </RouterLink>
                                         </DialogClose>
                                     </DialogFooter>
                                 </form>
@@ -292,51 +262,34 @@ const onLogoutSubmit = () => {
                             <span class="w-full cursor-pointer">Profile</span>
                         </RouterLink>
                     </DropdownMenuItem>
-                    <DropdownMenuItem
-                        v-if="
-                            authStore.user?.scope === 'admin' ||
-                            authStore.user?.scope === 'superadmin'
-                        "
-                        @select.prevent
-                    >
+                    <DropdownMenuItem v-if="
+                        authStore.user?.scope === 'admin' ||
+                        authStore.user?.scope === 'superadmin'
+                    " @select.prevent>
                         <RouterLink to="/admin/dashboard">
-                            <span class="w-full cursor-pointer"
-                                >Admin Dashboard</span
-                            >
+                            <span class="w-full cursor-pointer">Admin Dashboard</span>
                         </RouterLink>
                     </DropdownMenuItem>
-                    <DropdownMenuItem
-                        v-if="
-                            authStore.user?.scope === 'support' ||
-                            authStore.user?.scope === 'superadmin'
-                        "
-                        @select.prevent
-                    >
+                    <DropdownMenuItem v-if="
+                        authStore.user?.scope === 'support' ||
+                        authStore.user?.scope === 'superadmin'
+                    " @select.prevent>
                         <RouterLink to="/support/dashboard">
-                            <span class="w-full cursor-pointer"
-                                >Support Dashboard</span
-                            >
+                            <span class="w-full cursor-pointer">Support Dashboard</span>
                         </RouterLink>
                     </DropdownMenuItem>
-                    <DropdownMenuItem
-                        v-if="
-                            authStore.user?.scope === 'vendor' ||
-                            authStore.user?.scope === 'superadmin'
-                        "
-                        @select.prevent
-                    >
+                    <DropdownMenuItem v-if="
+                        authStore.user?.scope === 'vendor' ||
+                        authStore.user?.scope === 'superadmin'
+                    " @select.prevent>
                         <RouterLink to="/vendor/dashboard">
-                            <span class="w-full cursor-pointer"
-                                >Vendor Dashboard</span
-                            >
+                            <span class="w-full cursor-pointer">Vendor Dashboard</span>
                         </RouterLink>
                     </DropdownMenuItem>
                     <DropdownMenuItem @select.prevent>
                         <Dialog>
                             <DialogTrigger as-child>
-                                <span class="w-full cursor-pointer"
-                                    >Logout</span
-                                >
+                                <span class="w-full cursor-pointer">Logout</span>
                             </DialogTrigger>
                             <DialogContent>
                                 <DialogHeader>
@@ -346,9 +299,7 @@ const onLogoutSubmit = () => {
                                     <h1>Are you sure?</h1>
                                     <DialogFooter>
                                         <Button type="submit">Yes</Button>
-                                        <Button type="clear" variant="ghost"
-                                            >No</Button
-                                        >
+                                        <Button type="clear" variant="ghost">No</Button>
                                     </DialogFooter>
                                 </form>
                             </DialogContent>
@@ -370,13 +321,8 @@ const onLogoutSubmit = () => {
     </header>
     <nav class="flex justify-center">
         <NavigationMenu>
-            <NavigationMenuList
-                class="max-w-dvw flex flex-col sm:flex-row justify-center items-center overflow-auto"
-            >
-                <NavigationMenuItem
-                    v-for="item in navElements"
-                    :key="item.index"
-                >
+            <NavigationMenuList class="max-w-dvw flex flex-col sm:flex-row justify-center items-center overflow-auto">
+                <NavigationMenuItem v-for="item in navElements" :key="item.index">
                     <!-- If item has subnames, render Trigger + Content panel -->
                     <template v-if="item.subnames && item.subnames.length > 0">
                         <NavigationMenuTrigger>
@@ -392,11 +338,7 @@ const onLogoutSubmit = () => {
                     </template>
 
                     <!-- Top-level leaf link (no subitems) -->
-                    <NavigationMenuLink
-                        v-else
-                        :href="item.link || '#'"
-                        :class="navigationMenuTriggerStyle()"
-                    >
+                    <NavigationMenuLink v-else :href="item.link || '#'" :class="navigationMenuTriggerStyle()">
                         {{ item.name }}
                     </NavigationMenuLink>
                 </NavigationMenuItem>

@@ -19,12 +19,12 @@ class CategoryController extends Controller
             return response()->json([
                 "categories" => Category::all()
             ]);
-        } 
+        }
 
         $categories = Category::whereNull('parent_id')
                                 ->with('childrenRecursive')
                                 ->get();
-        
+
         return response()->json([
             "categories" => $categories
         ]);
@@ -70,13 +70,13 @@ class CategoryController extends Controller
     {
         $data = $request->validate([
             "name" => [
-                "sometimes", 
-                "string", 
+                "sometimes",
+                "string",
                 "max:255",
             ],
             "parent_id" => [
-                "nullable", 
-                "exists:categories,id", 
+                "nullable",
+                "exists:categories,id",
                 Rule::notIn([$category->id]),
             ]
         ]);

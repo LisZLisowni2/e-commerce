@@ -10,11 +10,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Product extends Model
 {
     use HasFactory;
+
     public $timestamps = true;
 
     public const CREATED_AT = 'created_at';
     public const UPDATED_AT = 'updated_at';
-    
+
     protected $fillable = [
         'name',
         'description',
@@ -34,7 +35,8 @@ class Product extends Model
         "last30DaysPrice" => PriceCast::class,
     ];
 
-    public function category(): BelongsTo {
+    public function category(): BelongsTo
+    {
         return $this->belongsTo(Category::class, 'category_id');
     }
 }
