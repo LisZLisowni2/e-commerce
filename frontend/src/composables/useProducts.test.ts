@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { ref, toValue } from "vue";
-import { useProducts, useProductsNotPagination } from "@/composables/useProducts";
+import { useProducts, useProduct, useProductsNotPagination } from "@/composables/useProducts";
 import { useQuery } from "@tanstack/vue-query";
 import api from "@/api";
 import type { PaginationResult } from "@/types/PaginationResult";
@@ -69,7 +69,7 @@ describe("useProducts", () => {
 
         useProducts({ page: 1 });
 
-        expect(toValue(opts.queryKey)).toEqual(["products", undefined, undefined, 1]);
+        expect(toValue(opts.queryKey)).toEqual(["products", undefined, undefined, undefined, 1]);
         expect(opts.queryFn).toBeTypeOf("function");
     });
 
@@ -87,7 +87,7 @@ describe("useProducts", () => {
 
         useProducts({ vendorId: 7, page: 1 });
 
-        expect(toValue(opts.queryKey)).toEqual(["products", 7, undefined, 1]);
+        expect(toValue(opts.queryKey)).toEqual(["products", 7, undefined, undefined, 1]);
     });
 
     it("uses a search-specific query key when searchQuery is provided", () => {
@@ -104,7 +104,24 @@ describe("useProducts", () => {
 
         useProducts({ searchQuery: "rtx", page: 1 });
 
-        expect(toValue(opts.queryKey)).toEqual(["products", undefined, "rtx", 1]);
+        expect(toValue(opts.queryKey)).toEqual(["products", undefined, "rtx", undefined, 1]);
+    });
+
+    it("uses a category-specific query key when category is provided", () => {
+        let opts: { queryKey?: unknown } = {};
+
+        vi.mocked(useQuery).mockImplementation((o: any) => {
+            opts = o;
+            return {
+                data: undefined,
+                isLoading: true,
+                error: null,
+            } as any;
+        });
+
+        useProducts({ category: "gpus", page: 1 });
+
+        expect(toValue(opts.queryKey)).toEqual(["products", undefined, undefined, "gpus", 1]);
     });
 
     it("reacts to changes in the reactive searchQuery and page", () => {
@@ -123,11 +140,11 @@ describe("useProducts", () => {
         const page = ref(1);
         useProducts({ searchQuery, page });
 
-        expect(toValue(opts.queryKey)).toEqual(["products", undefined, "", 1]);
+        expect(toValue(opts.queryKey)).toEqual(["products", undefined, "", undefined, 1]);
 
         searchQuery.value = "rtx";
         page.value = 2;
-        expect(toValue(opts.queryKey)).toEqual(["products", undefined, "rtx", 2]);
+        expect(toValue(opts.queryKey)).toEqual(["products", undefined, "rtx", undefined, 2]);
     });
 
     it("fetches paginated products from /products?paginated=true&page", async () => {
@@ -217,6 +234,48 @@ describe("useProducts", () => {
         expect(api.get).toHaveBeenCalledWith("/products?search_query=rtx&paginated=true&page=1");
     });
 
+    it("fetches products filtered by category from /products?category", async () => {
+        let queryFn: () => Promise<any>;
+
+        vi.mocked(useQuery).mockImplementation((opts: any) => {
+            queryFn = opts.queryFn;
+            return {
+                data: undefined,
+                isLoading: true,
+                error: null,
+            } as any;
+        });
+
+        useProducts({ category: "gpus", page: 1 });
+
+        vi.mocked(api.get).mockResolvedValue({ data: { products: mockProducts } });
+
+        await queryFn!();
+
+        expect(api.get).toHaveBeenCalledWith("/products?category=gpus&paginated=true&page=1");
+    });
+
+    it("does not send category when searchQuery is provided", async () => {
+        let queryFn: () => Promise<any>;
+
+        vi.mocked(useQuery).mockImplementation((opts: any) => {
+            queryFn = opts.queryFn;
+            return {
+                data: undefined,
+                isLoading: true,
+                error: null,
+            } as any;
+        });
+
+        useProducts({ searchQuery: "rtx", category: "gpus", page: 1 });
+
+        vi.mocked(api.get).mockResolvedValue({ data: { products: mockProducts } });
+
+        await queryFn!();
+
+        expect(api.get).toHaveBeenCalledWith("/products?search_query=rtx&paginated=true&page=1");
+    });
+
     it("fetches the latest search query when searchQuery changes reactively", async () => {
         let queryFn: () => Promise<any>;
         const searchQuery = ref("");
@@ -265,7 +324,7 @@ describe("useProducts", () => {
         );
     });
 
-    it("sends vendor_id over search_query when both are provided", async () => {
+    it("sends both vendor_id and search_query when both are provided", async () => {
         let queryFn: () => Promise<any>;
 
         vi.mocked(useQuery).mockImplementation((opts: any) => {
@@ -283,7 +342,7 @@ describe("useProducts", () => {
 
         await queryFn!();
 
-        expect(api.get).toHaveBeenCalledWith("/products?vendor_id=7&paginated=true&page=2");
+        expect(api.get).toHaveBeenCalledWith("/products?vendor_id=7&search_query=rtx&paginated=true&page=2");
     });
 
     it("reacts to page changes when filtering by search query", async () => {
@@ -393,7 +452,7 @@ describe("useProductsNotPagination", () => {
 
         useProductsNotPagination();
 
-        expect(toValue(opts.queryKey)).toEqual(["products", undefined, undefined, " -1"]);
+        expect(toValue(opts.queryKey)).toEqual(["products", undefined, undefined, undefined, " -1"]);
         expect(opts.queryFn).toBeTypeOf("function");
     });
 
@@ -411,7 +470,7 @@ describe("useProductsNotPagination", () => {
 
         useProductsNotPagination({ vendorId: 7 });
 
-        expect(toValue(opts.queryKey)).toEqual(["products", 7, undefined, " -1"]);
+        expect(toValue(opts.queryKey)).toEqual(["products", 7, undefined, undefined, " -1"]);
     });
 
     it("reacts to changes in the reactive searchQuery", () => {
@@ -429,10 +488,31 @@ describe("useProductsNotPagination", () => {
         const searchQuery = ref("");
         useProductsNotPagination({ searchQuery });
 
-        expect(toValue(opts.queryKey)).toEqual(["products", undefined, "", " -1"]);
+        expect(toValue(opts.queryKey)).toEqual(["products", undefined, "", undefined, " -1"]);
 
         searchQuery.value = "rtx";
-        expect(toValue(opts.queryKey)).toEqual(["products", undefined, "rtx", " -1"]);
+        expect(toValue(opts.queryKey)).toEqual(["products", undefined, "rtx", undefined, " -1"]);
+    });
+
+    it("reacts to changes in the reactive category", () => {
+        let opts: { queryKey?: unknown } = {};
+
+        vi.mocked(useQuery).mockImplementation((o: any) => {
+            opts = o;
+            return {
+                data: undefined,
+                isLoading: true,
+                error: null,
+            } as any;
+        });
+
+        const category = ref("");
+        useProductsNotPagination({ category });
+
+        expect(toValue(opts.queryKey)).toEqual(["products", undefined, undefined, "", " -1"]);
+
+        category.value = "gpus";
+        expect(toValue(opts.queryKey)).toEqual(["products", undefined, undefined, "gpus", " -1"]);
     });
 
     it("fetches products from /products endpoint", async () => {
@@ -499,6 +579,27 @@ describe("useProductsNotPagination", () => {
         expect(api.get).toHaveBeenCalledWith("/products?search_query=rtx");
     });
 
+    it("fetches products filtered by category from /products?category", async () => {
+        let queryFn: () => Promise<any>;
+
+        vi.mocked(useQuery).mockImplementation((opts: any) => {
+            queryFn = opts.queryFn;
+            return {
+                data: undefined,
+                isLoading: true,
+                error: null,
+            } as any;
+        });
+
+        useProductsNotPagination({ category: "gpus" });
+
+        vi.mocked(api.get).mockResolvedValue({ data: { products: mockProducts } });
+
+        await queryFn!();
+
+        expect(api.get).toHaveBeenCalledWith("/products?category=gpus");
+    });
+
     it("returns the products array from the response", async () => {
         let queryFn: () => Promise<any>;
 
@@ -535,6 +636,91 @@ describe("useProductsNotPagination", () => {
         });
 
         useProductsNotPagination();
+
+        vi.mocked(api.get).mockRejectedValue(new Error("Network Error"));
+
+        await expect(queryFn!()).rejects.toThrow("Network Error");
+    });
+});
+
+describe("useProduct", () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+
+    it("calls useQuery with the correct query key", () => {
+        let opts: { queryKey?: unknown } = {};
+
+        vi.mocked(useQuery).mockImplementation((o: any) => {
+            opts = o;
+            return {
+                data: undefined,
+                isLoading: true,
+                error: null,
+            } as any;
+        });
+
+        useProduct(42);
+
+        expect(opts.queryKey).toEqual(["product-", 42]);
+    });
+
+    it("fetches a single product from /product?id", async () => {
+        let queryFn: () => Promise<any>;
+
+        vi.mocked(useQuery).mockImplementation((opts: any) => {
+            queryFn = opts.queryFn;
+            return {
+                data: undefined,
+                isLoading: true,
+                error: null,
+            } as any;
+        });
+
+        useProduct(42);
+
+        vi.mocked(api.get).mockResolvedValue({ data: { product: mockProducts[0] } });
+
+        const result = await queryFn!();
+
+        expect(api.get).toHaveBeenCalledWith("/product?id=42");
+        expect(result).toEqual(mockProducts[0]);
+    });
+
+    it("returns the product from the response", async () => {
+        let queryFn: () => Promise<any>;
+
+        vi.mocked(useQuery).mockImplementation((opts: any) => {
+            queryFn = opts.queryFn;
+            return {
+                data: mockProducts[1],
+                isLoading: false,
+                error: null,
+            } as any;
+        });
+
+        useProduct(1);
+
+        vi.mocked(api.get).mockResolvedValue({ data: { product: mockProducts[1] } });
+
+        const result = await queryFn!();
+
+        expect(result.name).toBe("MacBook Pro");
+    });
+
+    it("propagates API errors", async () => {
+        let queryFn: () => Promise<any>;
+
+        vi.mocked(useQuery).mockImplementation((opts: any) => {
+            queryFn = opts.queryFn;
+            return {
+                data: undefined,
+                isLoading: false,
+                error: null,
+            } as any;
+        });
+
+        useProduct(42);
 
         vi.mocked(api.get).mockRejectedValue(new Error("Network Error"));
 

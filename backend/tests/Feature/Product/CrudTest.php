@@ -103,6 +103,44 @@ test('products can be filtered by search query', function () {
     expect($response->json('products.0.name'))->toBe('RTX 5070');
 });
 
+test('products can be filtered by category slug', function () {
+    $gpus = Category::factory()->create(['name' => 'Graphics Cards', 'slug' => 'graphics-cards']);
+    $laptops = Category::factory()->create(['name' => 'Laptops', 'slug' => 'laptops']);
+
+    Product::factory(2)->create(['category_id' => $gpus->id]);
+    Product::factory()->create(['category_id' => $laptops->id]);
+
+    $response = $this->getJson('/api/products?category=graphics-cards');
+
+    $response->assertStatus(200);
+    expect($response->json('products'))->toHaveCount(2);
+    expect($response->json('products.0.category_id'))->toBe($gpus->id);
+    expect($response->json('products.1.category_id'))->toBe($gpus->id);
+});
+
+test('paginated products can be filtered by category slug', function () {
+    $gpus = Category::factory()->create(['name' => 'Graphics Cards', 'slug' => 'graphics-cards']);
+    $laptops = Category::factory()->create(['name' => 'Laptops', 'slug' => 'laptops']);
+
+    Product::factory(25)->create(['category_id' => $gpus->id]);
+    Product::factory(3)->create(['category_id' => $laptops->id]);
+
+    $response = $this->getJson('/api/products?category=graphics-cards&paginated=true');
+
+    $response->assertStatus(200);
+    $response->assertJsonPath('products.total', 25);
+    expect(count($response->json('products.data')))->toBe(20);
+});
+
+test('category filter returns an empty list for an unknown slug', function () {
+    Product::factory()->create();
+
+    $response = $this->getJson('/api/products?category=nonexistent');
+
+    $response->assertStatus(200);
+    expect($response->json('products'))->toHaveCount(0);
+});
+
 test('products can be filtered by vendor and search query together', function () {
     $vendor = User::factory()->create(['scope' => ScopeEnum::VENDOR]);
     $otherVendor = User::factory()->create(['scope' => ScopeEnum::VENDOR]);
