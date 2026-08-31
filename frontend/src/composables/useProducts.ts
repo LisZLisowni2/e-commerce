@@ -31,8 +31,8 @@ export function useProducts(options: UseProductsOptions) {
             const params = new URLSearchParams();
             if (vendorId) {
                 params.set("vendor_id", String(vendorId));
-            } 
-            
+            }
+
             if (searchQuery) {
                 params.set("search_query", searchQuery);
             } else if (category) {
@@ -72,14 +72,14 @@ export function useProductsNotPagination(options: Omit<UseProductsOptions, 'page
             const params = new URLSearchParams();
             if (vendorId) {
                 params.set("vendor_id", String(vendorId));
-            } 
-            
+            }
+
             if (searchQuery) {
                 params.set("search_query", searchQuery);
             } else if (category) {
                 params.set("category", category)
             }
-            
+
             const queryString = params.toString();
             const url = queryString ? `/products?${queryString}` : "/products";
 
@@ -90,4 +90,16 @@ export function useProductsNotPagination(options: Omit<UseProductsOptions, 'page
         placeholderData: keepPreviousData,
         staleTime: 5 * 60 * 1000 // 5 minutes
     });
+}
+
+export function useProduct(id: number) {
+    return useQuery({
+        queryKey: ['product-', id],
+        queryFn: async () => {
+            const { data } = await api.get<{ product: Product }>(`/product?id=${id}`)
+
+            return data.product;
+        },
+        staleTime: 5 * 60 * 1000 // 5 minutes
+    })
 }
