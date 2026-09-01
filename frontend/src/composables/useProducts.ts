@@ -94,11 +94,11 @@ export function useProductsNotPagination(options: Omit<UseProductsOptions, 'page
 
 export function useProduct(id: number) {
     return useQuery({
-        queryKey: ['product-', id],
+        queryKey: [`product`, id],
         queryFn: async () => {
-            const { data } = await api.get<{ product: Product }>(`/product?id=${id}`)
+            const { data } = await api.get<Product>(`/products/${id}`)
 
-            return data.product;
+            return data;
         },
         staleTime: 5 * 60 * 1000 // 5 minutes
     })

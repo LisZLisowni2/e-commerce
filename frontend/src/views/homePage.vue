@@ -9,6 +9,7 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 
 import Section from "@/components/ui/Section.vue";
+import { RouterLink } from "vue-router";
 
 const { data: products, isLoading, error } = useProducts({ page: 1 });
 const modules = [Navigation, Pagination, A11y];
@@ -16,43 +17,24 @@ const modules = [Navigation, Pagination, A11y];
 
 <template>
     <Section>
-        <swiper
-            :slides-per-view="1"
-            :space-between="50"
-            navigation
-            :modules="modules"
-            :pagination="{ clickable: true }"
-            :scrollbar="{ draggable: true }"
-            :autoplay="{ delay: 5000 }"
-        >
+        <swiper :slides-per-view="1" :space-between="50" navigation :modules="modules" :pagination="{ clickable: true }"
+            :scrollbar="{ draggable: true }" :autoplay="{ delay: 5000 }">
         </swiper>
     </Section>
     <Section>
         <h1 class="text-3xl font-bold">Latest</h1>
-        <swiper
-            :slides-per-view="1"
-            :breakpoints="{
-                640: { slidesPerView: 2, spaceBetween: 20 },
-                768: { slidesPerView: 3, spaceBetween: 30 },
-                1024: { slidesPerView: 4, spaceBetween: 40 },
-                1280: { slidesPerView: 6, spaceBetween: 50 }
-            }"
-            :space-between="50"
-            navigation
-            :modules="modules"
-            :pagination="{ clickable: true }"
-            :scrollbar="{ draggable: true }"
-            :autoplay="{ delay: 5000 }"
-            class="m-8"
-            v-if="!isLoading"
-        >
+        <swiper :slides-per-view="1" :breakpoints="{
+            640: { slidesPerView: 2, spaceBetween: 20 },
+            768: { slidesPerView: 3, spaceBetween: 30 },
+            1024: { slidesPerView: 4, spaceBetween: 40 },
+            1280: { slidesPerView: 6, spaceBetween: 50 }
+        }" :space-between="50" navigation :modules="modules" :pagination="{ clickable: true }"
+            :scrollbar="{ draggable: true }" :autoplay="{ delay: 5000 }" class="m-8" v-if="!isLoading">
             <SwiperSlide v-if="!error" v-for="product in products?.data" :key="product.id">
-                <ItemCard 
-                    :title="product.name"
-                    :price="product.price"
-                    :image-url="product.imageURL"
-                    :lowest-price30-days="product.last30DaysPrice"
-                />
+                <RouterLink :to="`/product/${product.id}`">
+                    <ItemCard :title="product.name" :price="product.price" :image-url="product.imageURL"
+                        :lowest-price30-days="product.last30DaysPrice" />
+                </RouterLink>
             </SwiperSlide>
             <p class="text-red-500" v-else>Error!</p>
         </swiper>

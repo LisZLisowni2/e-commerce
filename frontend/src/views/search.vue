@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useRoute } from 'vue-router';
+import { RouterLink, useRoute } from 'vue-router';
 import router from '@/router/router';
 import { useProducts } from '@/composables/useProducts';
 import { computed, ref } from 'vue';
@@ -51,8 +51,10 @@ const { data: productsList } = route.params.query
         </aside>
         <section class="md:w-3/4 m-4 p-4 *:m-2 grid grid-cols-1 md:grid-cols-4 gap-4">
             <div class="hover:scale-105 transition-all" v-for="product in productsList?.data" :key="product.id">
-                <ItemCard :title="product.name" :price="product.price" :lowest-price30-days="product.last30DaysPrice"
-                    :image-url="product.imageURL" />
+                <RouterLink :to="`/product/${product.id}`">
+                    <ItemCard :title="product.name" :price="product.price"
+                        :lowest-price30-days="product.last30DaysPrice" :image-url="product.imageURL" />
+                </RouterLink>
             </div>
         </section>
     </div>

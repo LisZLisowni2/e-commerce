@@ -662,10 +662,10 @@ describe("useProduct", () => {
 
         useProduct(42);
 
-        expect(opts.queryKey).toEqual(["product-", 42]);
+        expect(opts.queryKey).toEqual(["product", 42]);
     });
 
-    it("fetches a single product from /product?id", async () => {
+    it("fetches a single product from /product/id", async () => {
         let queryFn: () => Promise<any>;
 
         vi.mocked(useQuery).mockImplementation((opts: any) => {
@@ -683,7 +683,7 @@ describe("useProduct", () => {
 
         const result = await queryFn!();
 
-        expect(api.get).toHaveBeenCalledWith("/product?id=42");
+        expect(api.get).toHaveBeenCalledWith("/products/42");
         expect(result).toEqual(mockProducts[0]);
     });
 
