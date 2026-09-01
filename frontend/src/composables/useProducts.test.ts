@@ -679,7 +679,7 @@ describe("useProduct", () => {
 
         useProduct(42);
 
-        vi.mocked(api.get).mockResolvedValue({ data: { product: mockProducts[0] } });
+        vi.mocked(api.get).mockResolvedValue({ data: mockProducts[0] });
 
         const result = await queryFn!();
 
@@ -701,7 +701,7 @@ describe("useProduct", () => {
 
         useProduct(1);
 
-        vi.mocked(api.get).mockResolvedValue({ data: { product: mockProducts[1] } });
+        vi.mocked(api.get).mockResolvedValue({ data: mockProducts[1] });
 
         const result = await queryFn!();
 
