@@ -234,7 +234,7 @@ const onLogoutSubmit = () => {
                                             <Label for="password-1">Password</Label>
                                             <Input id="password-1" v-model="password" name="password" type="password" />
                                             <span class="text-red-500" v-if="errors.password">{{ errors.password
-                                                }}</span>
+                                            }}</span>
                                             <span class="text-red-500" v-if="isError">{{ error }}</span>
                                         </FormField>
                                     </div>
@@ -313,7 +313,9 @@ const onLogoutSubmit = () => {
                 </template>
                 <template #content>
                     <DropdownMenuItem>
-                        <h1>Test</h1>
+                        <RouterLink to="/cart">
+                            Enter the cart
+                        </RouterLink>
                     </DropdownMenuItem>
                 </template>
             </IconDropdown>
